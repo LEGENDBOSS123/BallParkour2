@@ -12,7 +12,7 @@ var CollisionDetector = class {
         this.world = options?.world ?? null;
         this.contacts = options?.contacts ?? [];
         this.handlers = {};
-        this.binarySearchDepth = options?.binarySearchDepth ?? 4;
+        this.binarySearchDepth = options?.binarySearchDepth ?? 8;
         this.iterations = options?.iterations ?? 4;
         this.initHandlers();
     }
@@ -124,8 +124,8 @@ var CollisionDetector = class {
             var body2Map = maxParentMap[contact.body2.maxParent.id];
             contact.body1Map = body1Map;
             contact.body2Map = body2Map;
-            body1Map.penetrationSum += contact.penetration.magnitude();
-            body2Map.penetrationSum += contact.penetration.magnitude();
+            // body1Map.penetrationSum += contact.penetration.magnitude();
+            // body2Map.penetrationSum += contact.penetration.magnitude();
         }
 
         for (var iter = 0; iter < this.iterations; iter++) {

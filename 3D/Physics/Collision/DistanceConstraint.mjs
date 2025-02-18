@@ -38,7 +38,6 @@ var DistanceConstraint = class extends Constraint {
         this.mesh.mesh.geometry.setFromPoints(this.getPoints());
         this.mesh.mesh.geometry.attributes.position.needsUpdate = true;
         this.mesh.mesh.visible = true;
-        console.log(this.mesh);
     }
 
     solve() {
