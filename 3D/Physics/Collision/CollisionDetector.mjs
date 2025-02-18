@@ -124,8 +124,6 @@ var CollisionDetector = class {
             var body2Map = maxParentMap[contact.body2.maxParent.id];
             contact.body1Map = body1Map;
             contact.body2Map = body2Map;
-            // body1Map.penetrationSum += contact.penetration.magnitude();
-            // body2Map.penetrationSum += contact.penetration.magnitude();
         }
 
         for (var iter = 0; iter < this.iterations; iter++) {

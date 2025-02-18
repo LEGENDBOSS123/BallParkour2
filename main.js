@@ -113,14 +113,14 @@ world.graphicsEngine = graphicsEngine;
 
 var gravity = -0.2;
 var player = new Player({
-    radius: 3,
+    radius: 1,
     moveStrength: new Vector3(0.05, 0.05, 0.05),
     jumpStrength: 0.75,
     global: {
         body: {
             acceleration: new Vector3(0, gravity, 0),
             position: new Vector3(0, 30, 0),
-            //linearDamping: new Vector3(0.15, 0, 0.15),
+            //linearDamping: new Vector3(0.007, 0, 0.007),
             //angularDamping: 1
         }
     },
@@ -254,7 +254,7 @@ world.addComposite(sphere2);
 var constraint1 = new DistanceConstraint({
     body1: sphere1,
     body2: player.spheres[0],
-    anchor2: new Vector3(0, -3, 0),
+    anchor2: new Vector3(0, 1, 0),
     restLength: 10,
     graphicsEngine: graphicsEngine
 });
@@ -264,12 +264,16 @@ constraint1.setMeshAndAddToScene({}, graphicsEngine);
 world.addConstraint(constraint1);
 
 
-// world.constraints.push(new DistanceConstraint({
-//     body1: sphere1,
-//     body2: sphere2,
-//     restLength: 10,
-//     graphicsEngine: graphicsEngine
-// }));
+var constraint2 = new DistanceConstraint({
+    body1: player.spheres[0],
+    body2: sphere2,
+    restLength: 10,
+    anchor1: new Vector3(0, -1, 0),
+    graphicsEngine: graphicsEngine
+});
+constraint2.setMeshAndAddToScene({}, graphicsEngine);
+
+world.addConstraint(constraint2);
 
 // world.constraints.push(new DistanceConstraint({
 //     body1: sphere1,
