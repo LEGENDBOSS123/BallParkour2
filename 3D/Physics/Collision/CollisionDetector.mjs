@@ -3,6 +3,7 @@ import DistanceConstraint from "./DistanceConstraint.mjs";
 import CollisionContact from "./CollisionContact.mjs";
 import Triangle from "../Shapes/Triangle.mjs";
 import Composite from "../Shapes/Composite.mjs";
+import ClassRegistry from "../Core/ClassRegistry.mjs";
 var CollisionDetector = class {
 
     static seperatorCharacter = ":";
@@ -42,7 +43,7 @@ var CollisionDetector = class {
             shape1 = shape2;
             shape2 = temp;
         }
-        if (!(this.handlers[shape1.shape]?.[shape2.shape] || this.handlers[shape2.shape]?.[shape1.shape])) {
+        if (!(this.handlers[shape1.type]?.[shape2.type] || this.handlers[shape2.type]?.[shape1.type])) {
             return;
         }
         return this.pairs.set(shape1.id + this.constructor.seperatorCharacter + shape2.id, [shape1, shape2]);
@@ -55,22 +56,23 @@ var CollisionDetector = class {
         if (shape1.getLocalFlag(Composite.FLAGS.STATIC) && shape2.getLocalFlag(Composite.FLAGS.STATIC)) {
             return false;
         }
-        if (shape1.shape > shape2.shape) {
+        if (shape1.type > shape2.type) {
             var temp = shape1;
             shape1 = shape2;
             shape2 = temp;
         }
-        return this.handlers[shape1.shape]?.[shape2.shape]?.bind(this)(shape1, shape2);
+        return this.handlers[shape1.type]?.[shape2.type]?.bind(this)(shape1, shape2);
     }
 
     initHandlers() {
-        this.handlers[Composite.SHAPES.SPHERE] = {};
-        this.handlers[Composite.SHAPES.SPHERE][Composite.SHAPES.SPHERE] = this.handleSphereSphere;
-        this.handlers[Composite.SHAPES.SPHERE][Composite.SHAPES.TERRAIN3] = this.handleSphereTerrain;
-        this.handlers[Composite.SHAPES.SPHERE][Composite.SHAPES.BOX] = this.handleSphereBox;
-        this.handlers[Composite.SHAPES.TERRAIN3] = {};
-        this.handlers[Composite.SHAPES.TERRAIN3][Composite.SHAPES.POINT] = this.handleTerrainPoint;
-        this.handlers[Composite.SHAPES.BOX] = {};
+        this.handlers[ClassRegistry.getTypeFromName("SPHERE")] = {};
+        this.handlers[ClassRegistry.getTypeFromName("SPHERE")][ClassRegistry.getTypeFromName("SPHERE")] = this.handleSphereSphere;
+        this.handlers[ClassRegistry.getTypeFromName("SPHERE")][ClassRegistry.getTypeFromName("TERRAIN3")] = this.handleSphereTerrain;
+        this.handlers[ClassRegistry.getTypeFromName("SPHERE")][ClassRegistry.getTypeFromName("BOX")] = this.handleSphereBox;
+        this.handlers[ClassRegistry.getTypeFromName("TERRAIN3")] = {};
+        this.handlers[ClassRegistry.getTypeFromName("TERRAIN3")][ClassRegistry.getTypeFromName("POINT")] = this.handleTerrainPoint;
+        this.handlers[ClassRegistry.getTypeFromName("BOX")] = {};
+        top.ClassRegistry = ClassRegistry;
     }
 
     handle(shape) {

@@ -1,11 +1,11 @@
 import Composite from "./Composite.mjs";
 import Matrix3 from "../Math3D/Matrix3.mjs";
+import ClassRegistry from "../Core/ClassRegistry.mjs";
 
 var Point = class extends Composite {
     static name = "POINT";
     constructor(options) {
         super(options);
-        this.shape = this.constructor.SHAPES.POINT;
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, true);
         this.calculateLocalHitbox();
         this.calculateGlobalHitbox();
@@ -36,6 +36,6 @@ var Point = class extends Composite {
     }
 };
 
-Composite.REGISTER_SHAPE(Point);
+ClassRegistry.register(Point);
 
 export default Point;

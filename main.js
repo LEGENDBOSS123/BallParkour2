@@ -120,8 +120,8 @@ var player = new Player({
         body: {
             acceleration: new Vector3(0, gravity, 0),
             position: new Vector3(0, 30, 0),
-            //linearDamping: new Vector3(0.007, 0, 0.007),
-            //angularDamping: 1
+            // linearDamping: new Vector3(0.007, 0, 0.007),
+            // angularDamping: 1
         }
     },
     local: {
@@ -301,7 +301,10 @@ let spaceBarPressed = false;
 document.addEventListener('keydown', function (event) {
     if (event.code === 'Space' && !spaceBarPressed) {
         spaceBarPressed = true;
-        world.constraints.pop();
+        if(world.constraints.length == 0){
+            return;
+        }
+        world.removeConstraint(world.constraints.at(-1))
     }
 });
 
@@ -358,7 +361,7 @@ function render() {
             //player.respawn();
         }
         previousWorld = World.fromJSON(structuredClone(world.toJSON()), graphicsEngine);
-
+        top.previousWorld = previousWorld;
         stats2.begin();
         world.step();
 
@@ -391,9 +394,6 @@ function render() {
     
    
     graphicsEngine.update(previousWorld || world, world, lerpAmount);
-    for (var c of world.constraints) {
-        c.updateMesh();
-    }
     gameCamera.update(Vector3.from(player.getMainShape()?.mesh?.mesh?.position));
     particleSystem.update();
     graphicsEngine.render();

@@ -3,12 +3,13 @@ import Composite from "./Composite.mjs";
 import Matrix3 from "../Math3D/Matrix3.mjs";
 import Vector3 from "../Math3D/Vector3.mjs";
 import Quaternion from "../Math3D/Quaternion.mjs";
+import ClassRegistry from "../Core/ClassRegistry.mjs";
+
 
 var Box = class extends Composite {
     static name = "BOX";
     constructor(options) {
         super(options);
-        this.shape = this.constructor.SHAPES.BOX;
         this.width = options?.width ?? 1;
         this.height = options?.height ?? 1;
         this.depth = options?.depth ?? 1;
@@ -140,6 +141,6 @@ var Box = class extends Composite {
     }
 };
 
-Composite.REGISTER_SHAPE(Box);
+ClassRegistry.register(Box);
 
 export default Box;

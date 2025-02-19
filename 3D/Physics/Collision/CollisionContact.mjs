@@ -32,6 +32,7 @@ var CollisionContact = class {
             return false;
         }
         var tangential = this.velocity.projectOntoPlane(this.normal);
+        var tangentialNorm = tangential.normalize();
         if(!this.solved){
             var radius1 = this.point.subtract(this.body1.maxParent.global.body.position);
             var radius2 = this.point.subtract(this.body2.maxParent.global.body.position);
@@ -42,7 +43,7 @@ var CollisionContact = class {
             rotationalEffects2 = isFinite(rotationalEffects2) ? rotationalEffects2 : 0;
 
             
-            var tangentialNorm = tangential.normalize();
+            
             var rotationalEffects1Fric = tangentialNorm.dot(this.body1.maxParent.global.body.inverseMomentOfInertia.multiplyVector3(radius1.cross(tangentialNorm)).cross(radius1));
             var rotationalEffects2Fric = tangentialNorm.dot(this.body2.maxParent.global.body.inverseMomentOfInertia.multiplyVector3(radius2.cross(tangentialNorm)).cross(radius2));
             rotationalEffects1Fric = isFinite(rotationalEffects1Fric) ? rotationalEffects1Fric : 0;
@@ -80,9 +81,8 @@ var CollisionContact = class {
 
 
         var maxFriction = tangential.magnitude() / this.denominatorFric;
-        tangential.normalizeInPlace();
         var friction = impulse * this.material.friction;
-        this.impulse = tangential.scale(-1 * Math.max(0, Math.min(maxFriction, friction))).addInPlace(this.normal.scale(impulse));
+        this.impulse = tangentialNorm.scale(-1 * Math.max(0, Math.min(maxFriction, friction))).addInPlace(this.normal.scale(impulse));
         this.solved = true;
         return true;
     }

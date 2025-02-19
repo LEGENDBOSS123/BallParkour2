@@ -2,12 +2,13 @@ import Composite from "./Composite.mjs";
 import Vector3 from "../Math3D/Vector3.mjs";
 import Matrix3 from "../Math3D/Matrix3.mjs";
 import Triangle from "./Triangle.mjs";
+import ClassRegistry from "../Core/ClassRegistry.mjs";
+
 var Terrain3 = class extends Composite {
     static name = "TERRAIN3";
     constructor(options) {
         super(options);
 
-        this.shape = this.constructor.SHAPES.TERRAIN3;
 
         this.heightmaps = {};
 
@@ -331,12 +332,10 @@ var Terrain3 = class extends Composite {
         var topGeo = new graphicsEngine.THREE.PlaneGeometry(this.terrainWidth, this.terrainDepth, this.heightmaps.widthSegments, this.heightmaps.depthSegments);
         topGeo.rotateX(-Math.PI / 2);
         this.calculateMeshVertices(topGeo, this.heightmaps.top);
-        this.setColorGeometry(topGeo, graphicsEngine);
 
         var botGeo = new graphicsEngine.THREE.PlaneGeometry(this.terrainWidth, this.terrainDepth, this.heightmaps.widthSegments, this.heightmaps.depthSegments);
         botGeo.rotateX(-Math.PI / 2);
         this.calculateMeshVertices(botGeo, this.heightmaps.bottom);
-        this.setColorGeometry(botGeo, graphicsEngine);
 
         var leftGeo = new graphicsEngine.THREE.PlaneGeometry(this.terrainWidth, 1, this.heightmaps.widthSegments, 1);
         leftGeo.translate(0, 0, -this.terrainDepth / 2);
@@ -354,7 +353,6 @@ var Terrain3 = class extends Composite {
         leftAttrib.position.needsUpdate = true;
         leftGeo.computeVertexNormals();
         leftGeo.computeBoundingSphere();
-        this.setColorGeometry(leftGeo, graphicsEngine);
 
         var rightGeo = new graphicsEngine.THREE.PlaneGeometry(this.terrainWidth, 1, this.heightmaps.widthSegments, 1);
         rightGeo.translate(0, 0, this.terrainDepth / 2);
@@ -372,8 +370,6 @@ var Terrain3 = class extends Composite {
         rightAttrib.position.needsUpdate = true;
         rightGeo.computeVertexNormals();
         rightGeo.computeBoundingSphere();
-        this.setColorGeometry(rightGeo, graphicsEngine);
-
         var forwardGeo = new graphicsEngine.THREE.PlaneGeometry(this.terrainDepth, 1, this.heightmaps.depthSegments, 1);
         forwardGeo.rotateY(-Math.PI / 2);
         forwardGeo.translate(this.terrainWidth / 2, 0, 0);
@@ -391,7 +387,6 @@ var Terrain3 = class extends Composite {
         forwardAttrib.position.needsUpdate = true;
         forwardGeo.computeVertexNormals();
         forwardGeo.computeBoundingSphere();
-        this.setColorGeometry(forwardGeo, graphicsEngine);
 
         var backGeo = new graphicsEngine.THREE.PlaneGeometry(this.terrainDepth, 1, this.heightmaps.depthSegments, 1);
         backGeo.rotateY(-Math.PI / 2);
@@ -410,7 +405,6 @@ var Terrain3 = class extends Composite {
         backAttrib.position.needsUpdate = true;
         backGeo.computeVertexNormals();
         backGeo.computeBoundingSphere();
-        this.setColorGeometry(backGeo, graphicsEngine);
 
 
         this.mesh = graphicsEngine.meshLinker.createMeshData(new graphicsEngine.THREE.Mesh());
@@ -442,6 +436,6 @@ var Terrain3 = class extends Composite {
     }
 };
 
-Composite.REGISTER_SHAPE(Terrain3);
+ClassRegistry.register(Terrain3);
 
 export default Terrain3;

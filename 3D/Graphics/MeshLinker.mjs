@@ -35,10 +35,7 @@ var MeshLinker = class {
             mesh.mesh.visible = true;
             var composite = world.getByID(meshID);
             var previousComposite = previousWorld.getByID(meshID);
-            mesh.mesh.position.set(...previousComposite.global.body.position.lerp(composite.global.body.position, lerpAmount));
-            var quat = previousComposite.global.body.rotation.slerp(composite.global.body.rotation, lerpAmount);
-            mesh.mesh.quaternion.set(...[quat.x, quat.y, quat.z, quat.w]);
-
+            composite.lerpMesh(previousComposite, lerpAmount);
         }
     }
 };

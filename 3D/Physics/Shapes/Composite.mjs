@@ -3,8 +3,9 @@ import PhysicsBody3 from "../Core/PhysicsBody3.mjs";
 import Hitbox3 from "../Broadphase/Hitbox3.mjs";
 import Vector3 from "../Math3D/Vector3.mjs";
 import Matrix3 from "../Math3D/Matrix3.mjs";
-
-var Composite = class {
+import WorldObject from "../Core/WorldObject.mjs";
+import ClassRegistry from "../Core/ClassRegistry.mjs";
+var Composite = class extends WorldObject {
 
     static FLAGS = {
         STATIC: 1 << 0,
@@ -16,23 +17,11 @@ var Composite = class {
         OCCUPIES_SPACE: 1 << 6
     };
 
-    static SHAPES = {};
-
-    static SHAPES_CLASSES = {};
-
-    static SHAPE_MAX_ID = 0;
-    static REGISTER_SHAPE(obj) {
-        this.SHAPES[obj.name] = this.SHAPE_MAX_ID++;
-        this.SHAPES_CLASSES[this.SHAPES[obj.name]] = obj;
-    }
-
     static name = "COMPOSITE";
 
     constructor(options) {
-        this.id = options?.id ?? -1;
-        this.shape = options?.shape ?? this.constructor.SHAPES.COMPOSITE;
+        super(options);
 
-        this.world = options?.world ?? null;
         this.parent = options?.parent ?? null;
         this.maxParent = options?.maxParents ?? this;
         this.children = options?.children ?? [];
@@ -49,13 +38,10 @@ var Composite = class {
         this.local.flags = options?.local?.flags ?? 0;
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, false);
 
-        this.events = {};
-        this.toBeRemoved = options?.toBeRemoved ?? false;
+       
         this.isSensor = options?.isSensor ?? false;
 
         this.local.hitbox = new Hitbox3(options?.local?.hitbox);
-        this.graphicsEngine = options?.graphicsEngine ?? null;
-        this._mesh = options?.mesh ?? null;
 
     }
 
@@ -98,15 +84,6 @@ var Composite = class {
         this.events[event].splice(index, 1);
     }
 
-    dispatchEvent(event, args = []) {
-        if (!this.events[event]) {
-            return;
-        }
-        for (var listener in this.events[event]) {
-            this.events[event][listener](...args);
-        }
-    }
-
     setRestitution(restitution) {
         this.material.setRestitution(restitution);
         return this;
@@ -114,11 +91,6 @@ var Composite = class {
 
     setFriction(friction) {
         this.material.setFriction(friction);
-        return this;
-    }
-
-    setWorld(world) {
-        this.world = world;
         return this;
     }
 
@@ -405,26 +377,6 @@ var Composite = class {
         }
     }
 
-    setMesh(options, graphicsEngine) {
-        return null;
-    }
-
-    setMeshAndAddToScene(options, graphicsEngine) {
-        return null;
-    }
-
-    setColorGeometry(geometry, graphicsEngine) {
-        var attrib = geometry.attributes;
-        var color = new Float32Array(attrib.position.count * 3);
-        for (var i = 0; i < attrib.position.count; i++) {
-            var y = i * 3;
-            color[y] = 1;
-            color[y + 1] = 1;
-            color[y + 2] = 1;
-        }
-        geometry.setAttribute('color', new graphicsEngine.THREE.BufferAttribute(color, 3));
-    }
-
     update() {
         if (!this.isMaxParent()) {
             this.local.body.update(this.world);
@@ -461,21 +413,6 @@ var Composite = class {
 
     }
 
-    addToScene(scene) {
-        if (!this.mesh) {
-            return null;
-        }
-        if (this.mesh.isMeshLink) {
-            scene.add(this.mesh.mesh);
-            return;
-        }
-        scene.add(this.mesh);
-    }
-
-    addToWorld(world) {
-        world.addComposite(this);
-    }
-
     translateChildren(v) {
         for (var i = 0; i < this.children.length; i++) {
             this.children[i].local.body.position.addInPlace(v);
@@ -490,10 +427,20 @@ var Composite = class {
         }
     }
 
+    lerpMesh(last, lerp){
+        if(!this.mesh){
+            return;
+        }
+        this.mesh.mesh.position.set(...last.global.body.position.lerp(this.global.body.position, lerp));
+        var quat = last.global.body.rotation.slerp(this.global.body.rotation, lerp);
+        this.mesh.mesh.quaternion.set(...[quat.x, quat.y, quat.z, quat.w]);
+        this.mesh.mesh.visible = true;
+        // console.log(this.mesh.mesh.position);
+    }
+
     toJSON() {
-        var composite = {};
+        var composite = super.toJSON();
         composite.id = this.id;
-        composite.shape = this.shape;
         composite.world = this.world?.id ?? null;
         composite.parent = this.parent?.id ?? null;
         composite.maxParent = this.maxParent.id;
@@ -515,10 +462,9 @@ var Composite = class {
     }
 
     static fromJSON(json, world, graphicsEngine) {
-        var composite = new this();
+        var composite = super.fromJSON(json, world, graphicsEngine);
         composite.world = world;
         composite.id = json.id;
-        composite.shape = json.shape;
         composite.parent = json.parent;
         composite.maxParent = json.maxParent;
         composite.children = [];
@@ -547,23 +493,8 @@ var Composite = class {
             this.graphicsEngine = graphicsEngine;
         }
     }
-
-    set mesh(value) {
-        if (this.id == -1 || !value) {
-            this._mesh = value;
-            return;
-        }
-        this.graphicsEngine.meshLinker.addMesh(this.id, value);
-    }
-
-    get mesh() {
-        if (this.id == -1) {
-            return this._mesh;
-        }
-        return this.graphicsEngine.meshLinker.getByID(this.id);
-    }
 }
 
-Composite.REGISTER_SHAPE(Composite);
+ClassRegistry.register(Composite);
 
 export default Composite;

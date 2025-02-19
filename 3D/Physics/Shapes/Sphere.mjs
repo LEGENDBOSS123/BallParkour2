@@ -1,14 +1,13 @@
 import Composite from "./Composite.mjs";
 import Vector3 from "../Math3D/Vector3.mjs";
 import Matrix3 from "../Math3D/Matrix3.mjs";
-
+import ClassRegistry from "../Core/ClassRegistry.mjs";
 var Sphere = class extends Composite {
 
     static name = "SPHERE";
 
     constructor(options) {
         super(options);
-        this.shape = this.constructor.SHAPES.SPHERE;
         this.radius = options?.radius ?? 1;
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, true);
         this.calculateLocalHitbox();
@@ -42,7 +41,6 @@ var Sphere = class extends Composite {
 
     setMesh(options, graphicsEngine) {
         var geometry = options?.geometry ?? new graphicsEngine.THREE.SphereGeometry(this.radius, 32, 32);
-        this.setColorGeometry(geometry, graphicsEngine);
         this.mesh = graphicsEngine.meshLinker.createMeshData(new graphicsEngine.THREE.Mesh(geometry, options?.material ?? new graphicsEngine.THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: true })));
     }
 
@@ -64,6 +62,6 @@ var Sphere = class extends Composite {
     }
 };
 
-Composite.REGISTER_SHAPE(Sphere);
+ClassRegistry.register(Sphere);
 
 export default Sphere;

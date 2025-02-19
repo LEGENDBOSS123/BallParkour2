@@ -1,17 +1,16 @@
 import Vector3 from "../Math3D/Vector3.mjs";
 import Constraint from "./Constraint.mjs";
-
+import ClassRegistry from "../Core/ClassRegistry.mjs";
 var DistanceConstraint = class extends Constraint {
-    static name = "DISTANCE_CONSTRAINT";
+    static name = "DISTANCECONSTRAINT";
     constructor(options) {
 
         super(options);
 
-        this.shape = this.constructor.CONSTRAINTS.DISTANCE_CONSTRAINT;
         this.impulse = options?.impulse ?? new Vector3();
 
-        this.body1 = options?.body1;
-        this.body2 = options?.body2;
+        this.body1 = options?.body1 ?? null;
+        this.body2 = options?.body2 ?? null;
 
         this.point1 = options?.point1 ??  new Vector3();
         this.point2 = options?.point2 ?? new Vector3();
@@ -29,13 +28,25 @@ var DistanceConstraint = class extends Constraint {
     }
 
     getPoints(){
+        if(!this.body1 || !this.body2){
+            return null;
+        }
         var point1 = this.body1.global.body.position.add(this.body1.global.body.rotation.multiplyVector3(this.anchor1));
         var point2 = this.body2.global.body.position.add(this.body2.global.body.rotation.multiplyVector3(this.anchor2));
         return [point1, point2];
     }
 
-    updateMesh(lerpAmount){
-        this.mesh.mesh.geometry.setFromPoints(this.getPoints());
+    lerpMesh(last, lerp){
+        var lastPoints = last.getPoints();
+        if(!lastPoints){
+            return null;
+        }
+        var points = this.getPoints();
+        var lerped = [
+            lastPoints[0].lerp(points[0], lerp),
+            lastPoints[1].lerp(points[1], lerp)
+        ];
+        this.mesh.mesh.geometry.setFromPoints(lerped);
         this.mesh.mesh.geometry.attributes.position.needsUpdate = true;
         this.mesh.mesh.visible = true;
     }
@@ -94,9 +105,10 @@ var DistanceConstraint = class extends Constraint {
 
     setMesh(options, graphicsEngine){
         var geometry = new graphicsEngine.THREE.BufferGeometry().setFromPoints(this.getPoints());
-        var material = new graphicsEngine.THREE.LineBasicMaterial({ color: options?.color ?? 0xff0000 });
+        var material = new graphicsEngine.THREE.LineBasicMaterial({ color: options?.color ?? 0xff0000});
         material.side = graphicsEngine.THREE.DoubleSide;
         var line = new graphicsEngine.THREE.Line(geometry, material);
+        line.frustumCulled = false;
         this.mesh = graphicsEngine.meshLinker.createMeshData(line);
     }
 
@@ -131,8 +143,8 @@ var DistanceConstraint = class extends Constraint {
 
         json.impulse = this.impulse.toJSON();
 
-        json.body1 = this.world.getByID(this.body1);
-        json.body2 = this.world.getByID(this.body2);
+        json.body1 = this.body1.id;
+        json.body2 = this.body2.id;
 
         json.point1 = this.point1.toJSON();
         json.point2 = this.point2.toJSON();
@@ -153,8 +165,8 @@ var DistanceConstraint = class extends Constraint {
     static fromJSON(json, world){
         var distanceConstraint = super.fromJSON(json, world);
         distanceConstraint.impulse = Vector3.fromJSON(json.impulse);
-        distanceConstraint.body1 = world.getByID(json.body1);
-        distanceConstraint.body2 = world.getByID(json.body2);
+        distanceConstraint.body1 = json.body1;
+        distanceConstraint.body2 = json.body2;
         distanceConstraint.point1 = Vector3.fromJSON(json.point1);
         distanceConstraint.point2 = Vector3.fromJSON(json.point2);
         distanceConstraint.anchor1 = Vector3.fromJSON(json.anchor1);
@@ -166,9 +178,18 @@ var DistanceConstraint = class extends Constraint {
         distanceConstraint.solved = json.solved;
         return distanceConstraint;
     }
+
+    updateReferences(world = this.world, graphicsEngine = this.world.graphicsEngine) {
+        this.body1 = world.getByID(this.body1);
+        this.body2 = world.getByID(this.body2);
+        
+        if (graphicsEngine) {
+            this.graphicsEngine = graphicsEngine;
+        }
+    }
 };
 
-Constraint.REGISTER_CONSTRAINT(DistanceConstraint);
+ClassRegistry.register(DistanceConstraint);
 
 
 export default DistanceConstraint;
