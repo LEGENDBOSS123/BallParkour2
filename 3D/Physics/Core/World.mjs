@@ -68,15 +68,13 @@ var World = class {
     removeConstraint(element){
         this.constraints.splice(this.constraints.indexOf(element), 1);
         this.remove(element);
-    }
-    
-
+    }   
 
 
     remove(element){
         element.dispatchEvent("delete");
-        this.graphicsEngine.meshLinker.removeMesh(element.id);
         element.disposeMesh();
+        this.graphicsEngine.meshLinker.removeMesh(element.id);
         this.spatialHash.remove(element.id);
         delete this.all[element.id];
     }
