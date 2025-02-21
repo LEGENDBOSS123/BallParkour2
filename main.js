@@ -161,7 +161,7 @@ var addParticle = function (position, damage) {
 
 top.addParticle = addParticle;
 
-for (var i = 0; i < 3; i++) {
+for (var i = 0; i < 30; i++) {
     graphicsEngine.load('donut.glb', function (gltf) {
         gltf.scene.castShadow = true;
         gltf.scene.receiveShadow = true;
@@ -172,15 +172,13 @@ for (var i = 0; i < 3; i++) {
 
             if (child.isMesh) {
                 var poly = new Polyhedron({ local: { body: { mass: 1 } } }).fromMesh(child, graphicsEngine);
-                poly.calculateGlobalVertices();
                 poly.global.body.setPosition(new Vector3(Math.random() * 60 - 30, 10, Math.random() * 60 - 30));
                 poly.setRestitution(0);
                 poly.setFriction(0);
-                poly.setMeshAndAddToScene({}, graphicsEngine);
+                poly.mesh = graphicsEngine.meshLinker.createMeshData(child.clone());
+                poly.addToScene(graphicsEngine.scene);
                 poly.setLocalFlag(Composite.FLAGS.STATIC, true);
                 world.addComposite(poly);
-            }
-            else {
             }
         });
     });
@@ -232,92 +230,6 @@ for (var i = 0; i < 1; i++) {
     });
 
 }
-
-
-var sphere1 = new Sphere({
-    radius: 1,
-    global: {
-        body: {
-            position: new Vector3(100, 8.03, 0),
-        }
-    },
-    local: {
-        body: {
-            mass: 1
-        }
-    },
-    graphicsEngine: graphicsEngine
-});
-
-sphere1.setLocalFlag(Composite.FLAGS.STATIC, true);
-sphere1.setMeshAndAddToScene({}, graphicsEngine);
-world.addComposite(sphere1);
-
-
-
-
-
-// var sphere2 = new Sphere({
-//     radius: 0.5,
-//     global: {
-//         body: {
-//             position: new Vector3(0, 20, 10),
-//             acceleration: new Vector3(0, -0.2, 0)
-//         }
-//     },
-//     local: {
-//         body: {
-//             mass: 0.2
-//         }
-//     },
-//     graphicsEngine: graphicsEngine
-// });
-// top.sphere2 = sphere2;
-// sphere2.setLocalFlag(Composite.FLAGS.CENTER_OF_MASS, true);
-// sphere2.setMeshAndAddToScene({}, graphicsEngine);
-// world.addComposite(sphere2);
-
-// var constraint1 = new DistanceConstraint({
-//     body1: sphere1,
-//     body2: player.spheres[0],
-//     anchor2: new Vector3(0, 1, 0),
-//     restLength: 10,
-//     graphicsEngine: graphicsEngine
-// });
-
-// constraint1.setMeshAndAddToScene({}, graphicsEngine);
-
-// world.addConstraint(constraint1);
-
-
-// var constraint2 = new DistanceConstraint({
-//     body1: player.spheres[0],
-//     body2: sphere2,
-//     restLength: 10,
-//     anchor1: new Vector3(0, -1, 0),
-//     graphicsEngine: graphicsEngine
-// });
-// constraint2.setMeshAndAddToScene({}, graphicsEngine);
-
-// world.addConstraint(constraint2);
-
-// world.constraints.push(new DistanceConstraint({
-//     body1: sphere1,
-//     body2: player.spheres[0],
-//     anchor2: new Vector3(0, 3, 0),
-//     restLength: 10,
-//     graphicsEngine: graphicsEngine
-// }));
-
-// world.constraints.push(new DistanceConstraint({
-//     body1: sphere1,
-//     body2: player.spheres[0],
-//     anchor2: new Vector3(0, -3, 0),
-//     restLength: 10,
-//     graphicsEngine: graphicsEngine
-// }));
-
-
 
 
 
@@ -386,9 +298,10 @@ function render() {
         if (player.composite.global.body.position.y < -30) {
             //player.respawn();
         }
+        stats2.begin();
         previousWorld = World.fromJSON(structuredClone(world.toJSON()), graphicsEngine);
         top.previousWorld = previousWorld;
-        stats2.begin();
+        
         world.step();
 
         stats2.end();
@@ -412,14 +325,7 @@ function render() {
 
     }
 
-
-
-
-    var lerpAmount = stepper.getLerpAmount();
-
-
-
-    graphicsEngine.update(previousWorld || world, world, lerpAmount);
+    graphicsEngine.update(previousWorld || world, world, stepper.getLerpAmount());
     gameCamera.update(Vector3.from(player.getMainShape()?.mesh?.mesh?.position));
     particleSystem.update();
     graphicsEngine.render();

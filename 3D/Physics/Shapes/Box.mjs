@@ -28,14 +28,15 @@ var Box = class extends Composite {
     }
 
     calculateLocalHitbox() {
-
         this.local.hitbox.min = new Vector3(-this.width / 2, -this.height / 2, -this.depth / 2);
         this.local.hitbox.max = new Vector3(this.width / 2, this.height / 2, this.depth / 2);
-
         return this.local.hitbox;
     }
 
-    calculateGlobalHitbox() {
+    calculateGlobalHitbox(forced = false) {
+        if(!this.global.body.changed && !forced && this.global.body.position.equals(this.global.body.actualPreviousPosition) && this.global.body.previousRotation.equals(this.global.body.rotation)){
+            return;
+        }
         var localHitbox = this.local.hitbox;
 
         var updateForVertex = function (v) {
@@ -117,10 +118,9 @@ var Box = class extends Composite {
         this.height = Math.abs(mesh.scale.y) * 2 * cubeSize[1];
         this.depth = Math.abs(mesh.scale.z) * 2 * cubeSize[2];
         this.global.body.rotation = new Quaternion(mesh.quaternion.w, mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z);
-        this.global.body.previousRotation = this.global.body.rotation.copy();
         this.global.body.setPosition(new Vector3(mesh.position.x, mesh.position.y, mesh.position.z));
         this.calculateLocalHitbox();
-        this.calculateGlobalHitbox();
+        this.calculateGlobalHitbox(true);
         return this;
     }
 

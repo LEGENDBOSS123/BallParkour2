@@ -18,6 +18,10 @@ var Quaternion = class {
         return new this.constructor(w, x, y, z);
     }
 
+    equals(q){
+        return this.w == q.w && this.x == q.x && this.y == q.y && this.z == q.z;
+    }
+
     multiplyInPlace(q) {
         var oldW = this.w;
         var oldX = this.x;

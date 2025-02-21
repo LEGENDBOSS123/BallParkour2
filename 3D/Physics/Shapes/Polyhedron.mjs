@@ -27,7 +27,6 @@ var Polyhedron = class extends Composite {
             [2, 3, 7], [2, 7, 6], [0, 4, 7],
             [0, 7, 3], [1, 2, 6], [1, 6, 5],
         ];
-        this.calculateGlobalVertices();
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, true);
         this.calculateLocalHitbox();
         this.calculateGlobalHitbox();
@@ -59,7 +58,10 @@ var Polyhedron = class extends Composite {
         return this.local.hitbox;
     }
 
-    calculateGlobalHitbox() {
+    calculateGlobalHitbox(forced = false) {
+        if(!this.global.body.changed && !forced && this.global.body.position.equals(this.global.body.actualPreviousPosition) && this.global.body.previousRotation.equals(this.global.body.rotation)){
+            return;
+        }
         this.calculateGlobalVertices();
         this.global.hitbox.min = new Vector3(Infinity, Infinity, Infinity);
         this.global.hitbox.max = new Vector3(-Infinity, -Infinity, -Infinity);
@@ -159,26 +161,25 @@ var Polyhedron = class extends Composite {
         this.faces = faces;
         
         this.global.body.rotation = new Quaternion(mesh.quaternion.w, mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z);
-        this.global.body.previousRotation = this.global.body.rotation.copy();
         this.global.body.setPosition(new Vector3(mesh.position.x, mesh.position.y, mesh.position.z));
         this.calculateLocalHitbox();
-        this.calculateGlobalHitbox();
+        this.calculateGlobalHitbox(true);
         return this;
     }
 
     toJSON() {
         var poly = super.toJSON();
-        poly.localVertices = this.localVertices.map(function (v) { return v.toJSON() });
-        poly.globalVertices = this.globalVertices.map(function (v) { return v.toJSON() });
-        poly.faces = this.faces.map(function (f) { return [...f] });
+        // poly.localVertices = this.localVertices.map(function (v) { return v.toJSON() });
+        // poly.globalVertices = this.globalVertices.map(function (v) { return v.toJSON() });
+        // poly.faces = this.faces.map(function (f) { return [...f] });
         return poly;
     }
 
     static fromJSON(json, world) {
         var poly = super.fromJSON(json, world);
-        poly.localVertices = json.localVertices.map(function (v) { return Vector3.fromJSON(v) });
-        poly.globalVertices = json.globalVertices.map(function (v) { return Vector3.fromJSON(v) });
-        poly.faces = json.faces.map(function (f) { return [...f] });
+        // poly.localVertices = json.localVertices.map(function (v) { return Vector3.fromJSON(v) });
+        // poly.globalVertices = json.globalVertices.map(function (v) { return Vector3.fromJSON(v) });
+        // poly.faces = json.faces.map(function (f) { return [...f] });
         return poly;
     }
 };

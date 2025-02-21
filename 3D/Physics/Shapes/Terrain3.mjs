@@ -94,7 +94,10 @@ var Terrain3 = class extends Composite {
         return new Vector3(Math.max(0, Math.min(this.heightmaps.widthSegments, v.x)), v.y, Math.max(0, Math.min(this.heightmaps.depthSegments, v.z)));
     }
 
-    calculateGlobalHitbox() {
+    calculateGlobalHitbox(forced = false) {
+        if(!this.global.body.changed && !forced && this.global.body.position.equals(this.global.body.actualPreviousPosition) && this.global.body.previousRotation.equals(this.global.body.rotation)){
+            return;
+        }
         var localHitbox = this.local.hitbox;
 
         var updateForVertex = function (v) {

@@ -380,7 +380,6 @@ var Composite = class extends WorldObject {
     update() {
         if (!this.isMaxParent()) {
             this.local.body.update(this.world);
-            this.global.body.updateWithoutMoving(this.world);
             return;
         }
         this.global.body.update(this.world);
@@ -391,7 +390,7 @@ var Composite = class extends WorldObject {
         for (var i = 0; i < this.children.length; i++) {
             this.children[i].updateBeforeCollisionAll();
         }
-
+        
         this.update();
 
         if (this.isMaxParent()) {

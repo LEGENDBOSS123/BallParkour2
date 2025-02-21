@@ -265,6 +265,7 @@ var CollisionDetector = class {
         var polyPos = null;
         var relativePos = null;
         var inside = 0;
+        var inside2 = 0;
         var minT = 0;
         var maxT = 1;
         var binarySearch = function (t) {
@@ -275,13 +276,33 @@ var CollisionDetector = class {
             closestFace = null;
             minDistanceSquared = Infinity;
             inside = 0;
+            inside2 = 0;
+            var min = new Vector3();
+            var max = new Vector3();
+            var minS = relativePos.subtract(new Vector3(1, 1, 1).scale(sphere.radius));
+            var maxS = relativePos.add(new Vector3(1, 1, 1).scale(sphere.radius));
             for (var face of poly.faces) {
                 var a = poly.localVertices[face[0]];
                 var b = poly.localVertices[face[1]];
                 var c = poly.localVertices[face[2]];
+                min.x = Math.min(a.x, b.x, c.x);
+                max.x = Math.max(a.x, b.x, c.x);
+
+                min.y = Math.min(a.y, b.y, c.y);
+                max.y = Math.max(a.y, b.y, c.y);
+
+                min.z = Math.min(a.z, b.z, c.z);
+                max.z = Math.max(a.z, b.z, c.z);
+
+
+                if (!(min.x <= maxS.x && max.x >= minS.x && min.y <= maxS.y && max.y >= minS.y && min.z <= maxS.z && max.z >= minS.z)) {
+                    continue;
+                }
+                
                 var normal = b.subtract(a).cross(c.subtract(a));
                 var closest = this.closestPointOnTriangle(relativePos, a, b, c);
-                if (relativePos.subtract(closest).dot(normal) < 0) {
+                inside2++;
+                if (relativePos.subtract(a).dot(normal) < 0) {
                     inside++;
                 }
                 var distSq = closest.subtract(relativePos).magnitudeSquared();
@@ -308,13 +329,13 @@ var CollisionDetector = class {
         if (binarySearch(t) > 0 && inside != poly.faces.length) {
             return false;
         }
-        
+
 
         var closestPoint2 = poly.global.body.rotation.multiplyVector3(closestPoint).addInPlace(polyPos);
         var contact = new CollisionContact();
         contact.point = poly.translateLocalToWorld(closestPoint);
         contact.normal = spherePos.subtract(closestPoint2).normalizeInPlace();
-        if (inside == poly.faces.length) {
+        if (inside == inside2) {
             contact.normal.scaleInPlace(-1);
         }
         contact.penetration = contact.normal.scale(sphere.radius).add(contact.point.subtract(sphere.global.body.position).projectOnto(contact.normal));

@@ -126,11 +126,9 @@ var Player = class extends Entity {
 
     respawn() {
         this.composite.global.body.setPosition(this.spawnPoint.copy());
-        this.composite.global.body.actualPreviousPosition = this.composite.global.body.position.copy();
         this.composite.global.body.setVelocity(new Vector3(0, 0, 0));
         this.composite.global.body.angularVelocity.reset();
         this.composite.global.body.rotation.reset();
-        this.composite.global.body.previousRotation.reset();
         this.composite.global.body.netForce.reset();
         this.composite.global.body.netTorque.reset();
         this.canJump = true;

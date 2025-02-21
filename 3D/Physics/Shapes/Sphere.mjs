@@ -20,7 +20,10 @@ var Sphere = class extends Composite {
         return this.hitbox;
     }
 
-    calculateGlobalHitbox() {
+    calculateGlobalHitbox(forced = false) {
+        if(!this.global.body.changed && !forced && this.global.body.position.equals(this.global.body.actualPreviousPosition) && this.global.body.previousRotation.equals(this.global.body.rotation)){
+            return;
+        }
         this.global.hitbox.min = this.local.hitbox.min.add(this.global.body.position);
         this.global.hitbox.max = this.local.hitbox.max.add(this.global.body.position);
         return this.global.hitbox;
