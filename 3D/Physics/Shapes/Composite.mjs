@@ -28,6 +28,7 @@ var Composite = class extends WorldObject {
         this.material = options?.material ?? new Material();
         this.collisionMask = options?.collisionMask ?? 0b00000000000000000000000001;
         this.canCollideWithMask = options?.canCollideWithMask ?? 0b11111111111111111111111111;
+
         this.global = {};
         this.global.body = new PhysicsBody3(options?.global?.body);
         this.global.hitbox = new Hitbox3(options?.global?.hitbox);
@@ -37,10 +38,7 @@ var Composite = class extends WorldObject {
         this.local.body = new PhysicsBody3(options?.local?.body);
         this.local.flags = options?.local?.flags ?? 0;
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, false);
-
-       
         this.isSensor = options?.isSensor ?? false;
-
         this.local.hitbox = new Hitbox3(options?.local?.hitbox);
 
     }
@@ -115,7 +113,6 @@ var Composite = class extends WorldObject {
     }
 
     calculateGlobalMomentOfInertia() {
-        this.calculateLocalMomentOfInertia();
         this.global.body.momentOfInertia.setMatrix3(this.rotateLocalMomentOfInertia(this.global.body.rotation));
         var mass = this.local.body.mass;
         var dx = this.maxParent.global.body.position.x - this.global.body.position.x;
@@ -137,6 +134,12 @@ var Composite = class extends WorldObject {
         this.global.body.momentOfInertia.elements[7] += Iyz;
         this.global.body.momentOfInertia.elements[8] += Izz;
         return this.global.body.momentOfInertia;
+    }
+
+    dimensionsChanged(){
+        this.calculateLocalHitbox();
+        this.calculateGlobalHitbox(true);
+        this.calculateLocalMomentOfInertia();
     }
 
     calculateLocalHitbox() {

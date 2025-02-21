@@ -8,7 +8,7 @@ var SlimeSpawner = class extends Entity {
         this.sphere = new Sphere(options?.sphere);
         this.sphere.radius = 15;
         this.sphere.local.body.mass = Infinity;
-        this.sphere.calculateLocalHitbox();
+        this.sphere.dimensionsChanged();
 
         this.sphere.setLocalFlag(Composite.FLAGS.STATIC, true);
         this.sphere.setRestitution(0);

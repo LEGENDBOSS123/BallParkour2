@@ -37,6 +37,7 @@ var Player = class extends Entity {
         for (var sphere of this.spheres) {
             sphere.setRestitution(1);
             sphere.setFriction(100);
+            sphere.dimensionsChanged();
         }
         this.spawnPoint = this.spheres[0].global.body.position.copy();
         this.canJump = false;

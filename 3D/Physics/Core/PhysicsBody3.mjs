@@ -7,8 +7,8 @@ var PhysicsBody3 = class {
         this.mass = options?.mass ?? 1;
         this.inverseMass = options?.inverseMass ?? 1 / this.mass;
 
-        this.momentOfInertia = options?.momentOfInertia ?? new Matrix3();
-        this.inverseMomentOfInertia = options?.inverseMomentOfInertia ?? new Matrix3();
+        this.momentOfInertia = options?.momentOfInertia ?? Matrix3.zero();
+        this.inverseMomentOfInertia = options?.inverseMomentOfInertia ?? Matrix3.zero();
 
         this.position = Vector3.from(options?.position);
         this.actualPreviousPosition = Vector3.from(options?.actualPreviousPosition ?? this.position);

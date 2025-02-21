@@ -25,7 +25,7 @@ var Slime = class extends HealthEntity {
         this.sphere.collisionMask = 0;
         this.sphere.collisionMask = this.sphere.setBitMask(this.sphere.collisionMask, "S", true);
         this.target = null;
-        this.sphere.calculateLocalHitbox();
+        this.sphere.dimensionsChanged();
         this.handleTargetHit = function (target) {
             var world = this.sphere.world;
             var targetEntity = this.entitySystem.getByID(target.followID);

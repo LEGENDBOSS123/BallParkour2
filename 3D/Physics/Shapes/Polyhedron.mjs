@@ -28,8 +28,7 @@ var Polyhedron = class extends Composite {
             [0, 7, 3], [1, 2, 6], [1, 6, 5],
         ];
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, true);
-        this.calculateLocalHitbox();
-        this.calculateGlobalHitbox();
+        this.dimensionsChanged();
     }
 
     calculateGlobalVertices() {
@@ -39,13 +38,30 @@ var Polyhedron = class extends Composite {
         }
     }
 
-
     calculateLocalMomentOfInertia() {
         this.local.body.momentOfInertia = Matrix3.zero();
-        var I = (1 / 12) * this.local.body.mass * 8;
-        this.local.body.momentOfInertia.set(0, 0, I);
-        this.local.body.momentOfInertia.set(1, 1, I);
-        this.local.body.momentOfInertia.set(2, 2, I);
+        for (var v of this.localVertices) {
+            var r = v.magnitude();
+            var mass = this.local.body.mass / this.localVertices.length;
+            var dx = v.x;
+            var dy = v.y;
+            var dz = v.z;
+            var Ixx = mass * (dy * dy + dz * dz);
+            var Iyy = mass * (dx * dx + dz * dz);
+            var Izz = mass * (dx * dx + dy * dy);
+            var Ixy = - mass * dx * dy;
+            var Ixz = - mass * dx * dz;
+            var Iyz = - mass * dy * dz;
+            this.local.body.momentOfInertia.elements[0] += Ixx;
+            this.local.body.momentOfInertia.elements[1] += Ixy;
+            this.local.body.momentOfInertia.elements[2] += Ixz;
+            this.local.body.momentOfInertia.elements[3] += Ixy;
+            this.local.body.momentOfInertia.elements[4] += Iyy;
+            this.local.body.momentOfInertia.elements[5] += Iyz;
+            this.local.body.momentOfInertia.elements[6] += Ixz;
+            this.local.body.momentOfInertia.elements[7] += Iyz;
+            this.local.body.momentOfInertia.elements[8] += Izz;
+        }
         return this.local.body.momentOfInertia;
     }
 
@@ -59,7 +75,7 @@ var Polyhedron = class extends Composite {
     }
 
     calculateGlobalHitbox(forced = false) {
-        if(!this.global.body.changed && !forced && this.global.body.position.equals(this.global.body.actualPreviousPosition) && this.global.body.previousRotation.equals(this.global.body.rotation)){
+        if (!this.global.body.changed && !forced && this.global.body.position.equals(this.global.body.actualPreviousPosition) && this.global.body.previousRotation.equals(this.global.body.rotation)) {
             return;
         }
         this.calculateGlobalVertices();
@@ -159,11 +175,10 @@ var Polyhedron = class extends Composite {
         }
         this.localVertices = vertices;
         this.faces = faces;
-        
+
         this.global.body.rotation = new Quaternion(mesh.quaternion.w, mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z);
         this.global.body.setPosition(new Vector3(mesh.position.x, mesh.position.y, mesh.position.z));
-        this.calculateLocalHitbox();
-        this.calculateGlobalHitbox(true);
+        this.dimensionsChanged();
         return this;
     }
 

@@ -14,8 +14,7 @@ var Box = class extends Composite {
         this.height = options?.height ?? 1;
         this.depth = options?.depth ?? 1;
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, true);
-        this.calculateLocalHitbox();
-        this.calculateGlobalHitbox();
+        this.dimensionsChanged();
     }
 
     calculateLocalMomentOfInertia() {
@@ -119,8 +118,7 @@ var Box = class extends Composite {
         this.depth = Math.abs(mesh.scale.z) * 2 * cubeSize[2];
         this.global.body.rotation = new Quaternion(mesh.quaternion.w, mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z);
         this.global.body.setPosition(new Vector3(mesh.position.x, mesh.position.y, mesh.position.z));
-        this.calculateLocalHitbox();
-        this.calculateGlobalHitbox(true);
+        this.dimensionsChanged();
         return this;
     }
 

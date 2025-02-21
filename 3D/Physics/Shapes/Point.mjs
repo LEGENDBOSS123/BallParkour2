@@ -1,5 +1,4 @@
 import Composite from "./Composite.mjs";
-import Matrix3 from "../Math3D/Matrix3.mjs";
 import ClassRegistry from "../Core/ClassRegistry.mjs";
 
 var Point = class extends Composite {
@@ -7,13 +6,7 @@ var Point = class extends Composite {
     constructor(options) {
         super(options);
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, true);
-        this.calculateLocalHitbox();
-        this.calculateGlobalHitbox();
-    }
-
-    calculateLocalMomentOfInertia() {
-        this.local.body.momentOfInertia = Matrix3.zero();
-        return this.local.body.momentOfInertia;
+        this.dimensionsChanged();
     }
 
     rotateLocalMomentOfInertia(quaternion) {

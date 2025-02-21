@@ -31,8 +31,7 @@ var Terrain3 = class extends Composite {
 
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, true);
 
-        this.calculateLocalHitbox();
-        this.calculateGlobalHitbox();
+        this.dimensionsChanged();
     }
 
     setDimensions(width, depth) {
@@ -44,7 +43,7 @@ var Terrain3 = class extends Composite {
         this.terrainWidth = this.heightmaps.widthSegments * this.terrainScale;
         this.terrainDepth = this.heightmaps.depthSegments * this.terrainScale;
 
-        this.calculateLocalHitbox();
+        this.dimensionsChanged();
         return this;
     }
 
@@ -69,7 +68,7 @@ var Terrain3 = class extends Composite {
             this.heightmaps.bottom.map[i] -= averageHeight;
         }
 
-        this.calculateLocalHitbox();
+        this.dimensionsChanged();
     }
 
     calculateLocalHitbox() {
@@ -143,14 +142,14 @@ var Terrain3 = class extends Composite {
         this.inverseTerrainScale = 1 / x;
         this.terrainWidth = this.heightmaps.widthSegments * this.terrainScale;
         this.terrainDepth = this.heightmaps.depthSegments * this.terrainScale;
-        this.calculateLocalHitbox();
+        this.dimensionsChanged();
     }
 
     setMaps(top, bottom) {
         this.heightmaps.top.map = top;
         this.heightmaps.bottom.map = bottom;
 
-        this.calculateLocalHitbox();
+        this.dimensionsChanged();
     }
 
     static from2dArrays(top, bottom) {
@@ -210,7 +209,7 @@ var Terrain3 = class extends Composite {
         this.heightmaps.bottom.map = new Float32Array(bottom.flat());
         this.heightmaps.bottom.hitbox = this.makeHitbox(this.heightmaps.bottom);
 
-        this.calculateLocalHitbox();
+        this.dimensionsChanged();
         return this;
     }
 

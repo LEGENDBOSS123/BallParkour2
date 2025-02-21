@@ -10,8 +10,7 @@ var Sphere = class extends Composite {
         super(options);
         this.radius = options?.radius ?? 1;
         this.setLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE, true);
-        this.calculateLocalHitbox();
-        this.calculateGlobalHitbox();
+        this.dimensionsChanged();
     }
 
     calculateLocalHitbox() {
