@@ -227,7 +227,7 @@ for (var i = 0; i < 1; i++) {
             else {
             }
         })
-        //player.respawn();
+        player.respawn();
 
     });
 
