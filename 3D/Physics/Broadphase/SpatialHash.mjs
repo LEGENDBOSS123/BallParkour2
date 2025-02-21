@@ -2,16 +2,16 @@ import Vector3 from "../Math3D/Vector3.mjs";
 import Hitbox3 from "../Broadphase/Hitbox3.mjs";
 
 var SpatialHash = class {
-    static hashConstants = [4917, 2933, 9893, 512];
+    static hashConstants = [4917, 2933, 9893, 1024];
     constructor(options) {
         this.world = options?.world ?? null;
         this.spatialHashes = [];
-        for (var i = 0; i < (options?.gridSizes?.length ?? 16); i++) {
+        for (var i = 0; i < (options?.gridSizes?.length ?? 8); i++) {
             var spatialHash = {};
             spatialHash.hashmap = new Map();
-            spatialHash.gridSize = options?.gridSizes?.[i] ?? Math.pow(2, i) * 0.25;
+            spatialHash.gridSize = options?.gridSizes?.[i] ?? Math.pow(4, i) * 0.25;
             spatialHash.inverseGridSize = 1 / spatialHash.gridSize;
-            spatialHash.threshold = options?.thresholds?.[i] ?? 2;
+            spatialHash.threshold = options?.thresholds?.[i] ?? 1;
             spatialHash.translation = new Vector3();
             spatialHash.index = i;
             if(spatialHash.index % 2 == 0){
@@ -139,7 +139,7 @@ var SpatialHash = class {
         return true;
     }
 
-    _query(hitbox, result = new Set(), hash = this.spatialHashes[0]) {
+    _query(hitbox, result = new Set(), hash = this.spatialHashes[0], func) {
         if (hash.final) {
             if (hash.hashmap.size == 0) {
                 return result;
@@ -162,6 +162,9 @@ var SpatialHash = class {
                         map = hash.hashmap.get(cell);
                         if (map) {
                             for (var i = 0; i < map.length; i++) {
+                                if(!func(map[i])){
+                                    continue;
+                                }
                                 result.add(map[i]);
                             }
                         }
@@ -169,14 +172,17 @@ var SpatialHash = class {
                 }
             }
         }
-        return this._query(hitbox, result, hash.next);
+        return this._query(hitbox, result, hash.next, func);
     }
 
-    query(id) {
+    query(id, func) {
         if (!this.ids[id]) {
             return [];
         }
-        return this._query(this.ids[id].hitbox, new Set(), this.ids[id].hash);
+        if(!func){
+            func = function(x){return true}
+        }
+        return this._query(this.ids[id].hitbox, new Set(), this.ids[id].hash, func);
     }
 
     toJSON() {

@@ -8,6 +8,7 @@ import Material from "./3D/Physics/Collision/Material.mjs";
 import Composite from "./3D/Physics/Shapes/Composite.mjs";
 import Sphere from "./3D/Physics/Shapes/Sphere.mjs";
 import Box from "./3D/Physics/Shapes/Box.mjs";
+import Polyhedron from "./3D/Physics/Shapes/Polyhedron.mjs";
 import Point from "./3D/Physics/Shapes/Point.mjs";
 import Terrain3 from "./3D/Physics/Shapes/Terrain3.mjs";
 import SpatialHash from "./3D/Physics/Broadphase/SpatialHash.mjs";
@@ -119,7 +120,7 @@ var player = new Player({
     global: {
         body: {
             acceleration: new Vector3(0, gravity, 0),
-            position: new Vector3(0, 30, 0),
+            position: new Vector3(0, 21, 0),
             // linearDamping: new Vector3(0.007, 0, 0.007),
             // angularDamping: 1
         }
@@ -135,6 +136,8 @@ top.player = player;
 player.setMeshAndAddToScene({}, graphicsEngine);
 entitySystem.register(player);
 player.addToWorld(world);
+
+
 
 
 var addParticle = function (position, damage) {
@@ -158,7 +161,30 @@ var addParticle = function (position, damage) {
 
 top.addParticle = addParticle;
 
+for (var i = 0; i < 3; i++) {
+    graphicsEngine.load('donut.glb', function (gltf) {
+        gltf.scene.castShadow = true;
+        gltf.scene.receiveShadow = true;
 
+        gltf.scene.traverse(function (child) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+
+            if (child.isMesh) {
+                var poly = new Polyhedron({ local: { body: { mass: 1 } } }).fromMesh(child, graphicsEngine);
+                poly.calculateGlobalVertices();
+                poly.global.body.setPosition(new Vector3(Math.random() * 60 - 30, 10, Math.random() * 60 - 30));
+                poly.setRestitution(0);
+                poly.setFriction(0);
+                poly.setMeshAndAddToScene({}, graphicsEngine);
+                poly.setLocalFlag(Composite.FLAGS.STATIC, true);
+                world.addComposite(poly);
+            }
+            else {
+            }
+        });
+    });
+}
 for (var i = 0; i < 1; i++) {
     graphicsEngine.load('world.glb', function (gltf) {
         gltf.scene.castShadow = true;
@@ -212,7 +238,7 @@ var sphere1 = new Sphere({
     radius: 1,
     global: {
         body: {
-            position: new Vector3(0, 40, 0),
+            position: new Vector3(100, 8.03, 0),
         }
     },
     local: {
@@ -231,49 +257,49 @@ world.addComposite(sphere1);
 
 
 
-var sphere2 = new Sphere({
-    radius: 0.5,
-    global: {
-        body: {
-            position: new Vector3(0, 20, 10),
-            acceleration: new Vector3(0, -0.2, 0)
-        }
-    },
-    local: {
-        body: {
-            mass: 0.2
-        }
-    },
-    graphicsEngine: graphicsEngine
-});
-top.sphere2 = sphere2;
-sphere2.setLocalFlag(Composite.FLAGS.CENTER_OF_MASS, true);
-sphere2.setMeshAndAddToScene({}, graphicsEngine);
-world.addComposite(sphere2);
+// var sphere2 = new Sphere({
+//     radius: 0.5,
+//     global: {
+//         body: {
+//             position: new Vector3(0, 20, 10),
+//             acceleration: new Vector3(0, -0.2, 0)
+//         }
+//     },
+//     local: {
+//         body: {
+//             mass: 0.2
+//         }
+//     },
+//     graphicsEngine: graphicsEngine
+// });
+// top.sphere2 = sphere2;
+// sphere2.setLocalFlag(Composite.FLAGS.CENTER_OF_MASS, true);
+// sphere2.setMeshAndAddToScene({}, graphicsEngine);
+// world.addComposite(sphere2);
 
-var constraint1 = new DistanceConstraint({
-    body1: sphere1,
-    body2: player.spheres[0],
-    anchor2: new Vector3(0, 1, 0),
-    restLength: 10,
-    graphicsEngine: graphicsEngine
-});
+// var constraint1 = new DistanceConstraint({
+//     body1: sphere1,
+//     body2: player.spheres[0],
+//     anchor2: new Vector3(0, 1, 0),
+//     restLength: 10,
+//     graphicsEngine: graphicsEngine
+// });
 
-constraint1.setMeshAndAddToScene({}, graphicsEngine);
+// constraint1.setMeshAndAddToScene({}, graphicsEngine);
 
-world.addConstraint(constraint1);
+// world.addConstraint(constraint1);
 
 
-var constraint2 = new DistanceConstraint({
-    body1: player.spheres[0],
-    body2: sphere2,
-    restLength: 10,
-    anchor1: new Vector3(0, -1, 0),
-    graphicsEngine: graphicsEngine
-});
-constraint2.setMeshAndAddToScene({}, graphicsEngine);
+// var constraint2 = new DistanceConstraint({
+//     body1: player.spheres[0],
+//     body2: sphere2,
+//     restLength: 10,
+//     anchor1: new Vector3(0, -1, 0),
+//     graphicsEngine: graphicsEngine
+// });
+// constraint2.setMeshAndAddToScene({}, graphicsEngine);
 
-world.addConstraint(constraint2);
+// world.addConstraint(constraint2);
 
 // world.constraints.push(new DistanceConstraint({
 //     body1: sphere1,
@@ -301,7 +327,7 @@ let spaceBarPressed = false;
 document.addEventListener('keydown', function (event) {
     if (event.code === 'Space' && !spaceBarPressed) {
         spaceBarPressed = true;
-        if(world.constraints.length == 0){
+        if (world.constraints.length == 0) {
             return;
         }
         world.removeConstraint(world.constraints.at(-1))
@@ -391,8 +417,8 @@ function render() {
 
     var lerpAmount = stepper.getLerpAmount();
 
-    
-   
+
+
     graphicsEngine.update(previousWorld || world, world, lerpAmount);
     gameCamera.update(Vector3.from(player.getMainShape()?.mesh?.mesh?.position));
     particleSystem.update();

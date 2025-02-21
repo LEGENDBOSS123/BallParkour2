@@ -80,7 +80,7 @@ var World = class {
     }
 
     step() {
-        
+        if(top.stopped) return;
         for (var i in this.all) {
             this.all[i].dispatchEvent("preStep");
         }

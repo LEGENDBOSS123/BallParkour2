@@ -76,28 +76,28 @@ var Box = class extends Composite {
         return this.global.hitbox;
     }
 
-    getVerticies() {
-        var verticies = [];
+    getVertices() {
+        var vertices = [];
         for (var x = -1; x <= 1; x += 2) {
             for (var y = -1; y <= 1; y += 2) {
                 for (var z = -1; z <= 1; z += 2) {
-                    verticies.push(this.translateLocalToWorld(new Vector3(x * this.width / 2, y * this.height / 2, z * this.depth / 2)));
+                    vertices.push(this.translateLocalToWorld(new Vector3(x * this.width / 2, y * this.height / 2, z * this.depth / 2)));
                 }
             }
         }
-        return verticies;
+        return vertices;
     }
 
-    getLocalVerticies() {
-        var verticies = [];
+    getLocalVertices() {
+        var vertices = [];
         for (var x = -1; x <= 1; x += 2) {
             for (var y = -1; y <= 1; y += 2) {
                 for (var z = -1; z <= 1; z += 2) {
-                    verticies.push(new Vector3(x, y, z));
+                    vertices.push(new Vector3(x, y, z));
                 }
             }
         }
-        return verticies;
+        return vertices;
     }
 
     setMesh(options, graphicsEngine) {
@@ -116,7 +116,7 @@ var Box = class extends Composite {
         this.width = Math.abs(mesh.scale.x) * 2 * cubeSize[0];
         this.height = Math.abs(mesh.scale.y) * 2 * cubeSize[1];
         this.depth = Math.abs(mesh.scale.z) * 2 * cubeSize[2];
-        this.global.body.rotation = new Quaternion(mesh.quaternion.w, mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z,);
+        this.global.body.rotation = new Quaternion(mesh.quaternion.w, mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z);
         this.global.body.previousRotation = this.global.body.rotation.copy();
         this.global.body.setPosition(new Vector3(mesh.position.x, mesh.position.y, mesh.position.z));
         this.calculateLocalHitbox();

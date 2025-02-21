@@ -349,15 +349,15 @@ var Composite = class extends WorldObject {
         if (this.world?.spatialHash && this.getLocalFlag(this.constructor.FLAGS.OCCUPIES_SPACE)) {
             this.world.spatialHash.addHitbox(this.global.hitbox, this.id);
         }
-        for (var i = 0; i < this.children.length; i++) {
-            this.children[i].updateGlobalHitboxAll();
+        for (var child of this.children) {
+            child.updateGlobalHitboxAll();
         }
     }
 
     updateGlobalMomentOfInertiaAll() {
         this.calculateGlobalMomentOfInertia();
-        for (var i = 0; i < this.children.length; i++) {
-            this.children[i].updateGlobalMomentOfInertiaAll();
+        for (var child of this.children) {
+            child.updateGlobalMomentOfInertiaAll();
         }
         this.global.body.inverseMomentOfInertia = this.global.body.momentOfInertia.invert();
     }
@@ -369,8 +369,8 @@ var Composite = class extends WorldObject {
         else {
             this.maxParent.global.body.momentOfInertia.addInPlace(this.global.body.momentOfInertia);
         }
-        for (var i = 0; i < this.children.length; i++) {
-            this.children[i].updateMaxParentMomentOfInertia();
+        for (var child of this.children) {
+            child.updateMaxParentMomentOfInertia();
         }
         if (this.isMaxParent()) {
             this.maxParent.global.body.inverseMomentOfInertia = this.maxParent.global.body.momentOfInertia.invert();
@@ -398,7 +398,7 @@ var Composite = class extends WorldObject {
             this.calculatePropertiesAll();
             this.syncAll();
         }
-
+        
         this.updateGlobalHitboxAll();
 
         if (this.isMaxParent()) {
@@ -435,7 +435,6 @@ var Composite = class extends WorldObject {
         var quat = last.global.body.rotation.slerp(this.global.body.rotation, lerp);
         this.mesh.mesh.quaternion.set(...[quat.x, quat.y, quat.z, quat.w]);
         this.mesh.mesh.visible = true;
-        // console.log(this.mesh.mesh.position);
     }
 
     toJSON() {
