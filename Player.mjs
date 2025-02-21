@@ -35,7 +35,7 @@ var Player = class extends Entity {
         this.composite.setRestitution(0);
         this.composite.setFriction(0);
         for (var sphere of this.spheres) {
-            sphere.setRestitution(1);
+            sphere.setRestitution(0);
             sphere.setFriction(100);
             sphere.dimensionsChanged();
         }

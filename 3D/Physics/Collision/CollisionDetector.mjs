@@ -139,10 +139,10 @@ var CollisionDetector = class {
                 var b = contact.body2.maxParent;
                 var a_body = a.global.body;
                 var b_body = b.global.body;
-                a_body.netForce.reset();
-                b_body.netForce.reset();
-                a_body.netTorque.reset();
-                b_body.netTorque.reset();
+                // a_body.netForce.reset();
+                // b_body.netForce.reset();
+                // a_body.netTorque.reset();
+                // b_body.netTorque.reset();
                 contact.applyForces();
                 a_body.setVelocity(a_body.getVelocity().add(a_body.netForce.scale(a_body.inverseMass).multiply(new Vector3(1 - a_body.linearDamping.x, 1 - a_body.linearDamping.y, 1 - a_body.linearDamping.z))));
                 b_body.setVelocity(b_body.getVelocity().add(b_body.netForce.scale(b_body.inverseMass).multiply(new Vector3(1 - b_body.linearDamping.x, 1 - b_body.linearDamping.y, 1 - b_body.linearDamping.z))));
@@ -471,8 +471,8 @@ var CollisionDetector = class {
         var sphere2Pos = null;
         var distanceSquared = null;
         var binarySearch = function (t) {
-            sphere1Pos = sphere1.global.body.actualPreviousPosition.lerp(sphere1.global.body.position, t);
-            sphere2Pos = sphere2.global.body.actualPreviousPosition.lerp(sphere2.global.body.position, t);
+            sphere1Pos = sphere1.global.body.previousPosition.lerp(sphere1.global.body.position, t);
+            sphere2Pos = sphere2.global.body.previousPosition.lerp(sphere2.global.body.position, t);
             distanceSquared = sphere1Pos.subtract(sphere2Pos).magnitudeSquared();
             return distanceSquared - (sphere1.radius + sphere2.radius) * (sphere1.radius + sphere2.radius);
         }.bind(this);
@@ -488,7 +488,6 @@ var CollisionDetector = class {
         }
 
         t = maxT;
-
 
         var isColliding = binarySearch(t) < 0;
 
@@ -506,7 +505,7 @@ var CollisionDetector = class {
 
         contact.body1 = sphere1;
         contact.body2 = sphere2;
-        var penetration = sphere1.radius + sphere2.radius - distanceTo
+        var penetration = sphere1.radius + sphere2.radius - distanceTo;
 
         contact.penetration = contact.normal.scale(penetration);
 
@@ -623,7 +622,7 @@ var CollisionDetector = class {
     handleTerrainPoint(terrain1, point1, manual = false) {
         var pointPos = point1.global.body.position;
 
-        var pointPosPrev = point1.global.body.actualPreviousPosition;
+        var pointPosPrev = point1.global.body.previousPosition;
         var translatedPointPos = terrain1.translateWorldToLocal(pointPos);
         var heightmapPos = terrain1.translateLocalToHeightmap(translatedPointPos);
         var translatedPointPosPrev = terrain1.translateWorldToLocal(pointPosPrev);

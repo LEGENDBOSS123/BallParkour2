@@ -113,31 +113,32 @@ world.setIterations(4);
 world.graphicsEngine = graphicsEngine;
 
 var gravity = -0.2;
-var player = new Player({
-    radius: 1,
-    moveStrength: new Vector3(0.05, 0.05, 0.05),
-    jumpStrength: 0.75,
-    global: {
-        body: {
-            acceleration: new Vector3(0, gravity, 0),
-            position: new Vector3(0, 21, 0),
-            // linearDamping: new Vector3(0.007, 0, 0.007),
-            // angularDamping: 1
-        }
-    },
-    local: {
-        body: {
-            mass: 1
-        }
-    },
-    graphicsEngine: graphicsEngine
-});
-top.player = player;
-player.setMeshAndAddToScene({}, graphicsEngine);
-entitySystem.register(player);
-player.addToWorld(world);
+for (var i = 0; i < 10; i++) {
+    var player = new Player({
+        radius: 1,
+        moveStrength: new Vector3(0.05, 0.05, 0.05),
+        jumpStrength: 0.75,
+        global: {
+            body: {
+                acceleration: new Vector3(0, gravity, 0),
+                position: new Vector3(0, 21, 0),
+                // linearDamping: new Vector3(0.007, 0, 0.007),
+                // angularDamping: 1
+            }
+        },
+        local: {
+            body: {
+                mass: 1
+            }
+        },
+        graphicsEngine: graphicsEngine
+    });
+    top.player = player;
+    player.setMeshAndAddToScene({}, graphicsEngine);
+    entitySystem.register(player);
+    player.addToWorld(world);
 
-
+}
 
 
 var addParticle = function (position, damage) {
@@ -231,6 +232,25 @@ for (var i = 0; i < 1; i++) {
 
 }
 
+var sphere2 = new Sphere({
+    radius: 0.5,
+    global: {
+        body: {
+            position: new Vector3(0, 20, 10),
+            acceleration: new Vector3(0, -0.2, 0)
+        }
+    },
+    local: {
+        body: {
+            mass: 0.2
+        }
+    },
+    graphicsEngine: graphicsEngine
+});
+top.sphere2 = sphere2;
+sphere2.setLocalFlag(Composite.FLAGS.CENTER_OF_MASS, true);
+sphere2.setMeshAndAddToScene({}, graphicsEngine);
+world.addComposite(sphere2);
 
 
 
@@ -301,7 +321,7 @@ function render() {
         stats2.begin();
         previousWorld = World.fromJSON(structuredClone(world.toJSON()), graphicsEngine);
         top.previousWorld = previousWorld;
-        
+
         world.step();
 
         stats2.end();
