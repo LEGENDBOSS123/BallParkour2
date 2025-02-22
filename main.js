@@ -121,7 +121,7 @@ for (var i = 0; i < 1; i++) {
         global: {
             body: {
                 acceleration: new Vector3(0, gravity, 0),
-                position: new Vector3(0, 40, 0),
+                position: new Vector3(100, 40, 120),
                 // linearDamping: new Vector3(0.007, 0, 0.007),
                 // angularDamping: 1
             }
@@ -165,6 +165,7 @@ top.addParticle = addParticle;
 for (var i = 0; i < 1; i++) {
     var composite = new Composite();
     composite.setLocalFlag(Composite.FLAGS.STATIC, true);
+    top.comp = composite;
     graphicsEngine.load('maze.glb', function (gltf) {
         gltf.scene.castShadow = true;
         gltf.scene.receiveShadow = true;
@@ -177,18 +178,18 @@ for (var i = 0; i < 1; i++) {
                 var s = 0;
                 child.scale.x = 8; child.scale.y = 8; child.scale.z = 8;
                 var poly = new Polyhedron({ local: { body: { mass: 1 } } }).fromMesh(child, graphicsEngine);
-                poly.global.body.setPosition(new Vector3(Math.random() * 6 * s - 3 * s, 10, -child.scale.x * 0.5 +Math.random() * 6 * s - 3 * s));
+                poly.global.body.setPosition(new Vector3(Math.random() * 6 * s - 3 * s, 0,  Math.random() * 6 * s - 3 * s));
                 poly.setRestitution(0);
                 poly.setFriction(0);
                 poly.mesh = graphicsEngine.meshLinker.createMeshData(child.clone());
                 poly.addToScene(graphicsEngine.scene);
                 poly.setLocalFlag(Composite.FLAGS.STATIC, true);
-                composite.add(poly);
+                // composite.add(poly);
                 world.addComposite(poly);
             }
         });
     });
-    world.addComposite(composite);
+    // world.addComposite(composite);
 }
 top.Vector3 = Vector3;
 for (var i = 0; i < 1; i++) {

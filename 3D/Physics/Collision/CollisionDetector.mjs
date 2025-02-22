@@ -343,7 +343,7 @@ var CollisionDetector = class {
 
                 if (!(min.x <= maxS.x && max.x >= minS.x && min.y <= maxS.y && max.y >= minS.y && min.z <= maxS.z && max.z >= minS.z)) {
                     if (!disableHitbox) {
-                        continue;
+                        //continue;
                     }
                 }
 
@@ -355,6 +355,7 @@ var CollisionDetector = class {
                 }
             }
             if (inside % 2 == 1) {
+                console.log(1)
                 return -(minDistanceSquared + sphere.radius * sphere.radius);
             }
             return minDistanceSquared - sphere.radius * sphere.radius;

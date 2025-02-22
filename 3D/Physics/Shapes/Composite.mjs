@@ -228,6 +228,7 @@ var Composite = class extends WorldObject {
         child.setParentAll(this);
         child.setMaxParentAll(this);
         this.children.push(child);
+        child.syncAll();
     }
 
     isMaxParent() {
