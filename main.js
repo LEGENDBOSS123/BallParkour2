@@ -56,7 +56,7 @@ graphicsEngine.setBackgroundImage("3D/Graphics/Textures/autumn_field_puresky_8k.
 graphicsEngine.setSunlightDirection(new Vector3(-2, -8, -5));
 graphicsEngine.setSunlightBrightness(1);
 graphicsEngine.disableAO();
-
+graphicsEngine.disableShadows();
 
 graphicsEngine.renderDistance = 2048;
 graphicsEngine.cameraFar = 4096;
@@ -116,14 +116,14 @@ var gravity = -0.2;
 for (var i = 0; i < 1; i++) {
     var player = new Player({
         radius: 1,
-        moveStrength: new Vector3(0.05, 0.05, 0.05),
-        jumpStrength: 0.75,
+        moveStrength: new Vector3(0.05, 0.05, 0.05).scale(2),
+        jumpStrength: 0,
         global: {
             body: {
-                acceleration: new Vector3(0, gravity, 0),
+                acceleration: new Vector3(0, 0, 0),
                 position: new Vector3(0, 20, 0),
-                // linearDamping: new Vector3(0.007, 0, 0.007),
-                // angularDamping: 1
+                linearDamping: new Vector3(0.01, 0.01, 0.01),
+                angularDamping: 1
             }
         },
         local: {
@@ -162,38 +162,58 @@ var addParticle = function (position, damage) {
 
 top.addParticle = addParticle;
 
+function hasOver2000FacesOrVertices(mesh) {
+    const geometry = mesh.geometry;
+    var n = [100, 1300];
+    const numFaces = geometry.isBufferGeometry ? geometry.attributes.position.count / 3 : geometry.faces.length;
+    if(mesh.geometry.boundingSphere.radius < 400){
+        return false;
+    }
+    mesh.material.depthWrite = true;
+    return numFaces > n[0] && numFaces < n[1];
+}
+
 for (var i = 0; i < 1; i++) {
-    var composite = new Composite();
-    composite.setLocalFlag(Composite.FLAGS.STATIC, true);
-    top.comp = composite;
-    graphicsEngine.load('maze.glb', function (gltf) {
+    // var composite = new Composite();
+    // composite.setLocalFlag(Composite.FLAGS.STATIC, true);
+    // top.comp = composite;
+    graphicsEngine.load('bss.glb', function (gltf) {
         gltf.scene.castShadow = true;
         gltf.scene.receiveShadow = true;
-
+        //graphicsEngine.scene.add(gltf.scene.children[0]);
         gltf.scene.traverse(function (child) {
+            child = child.clone();
             child.castShadow = true;
             child.receiveShadow = true;
-
             if (child.isMesh) {
+                child.quaternion.copy((new THREE.Quaternion(0.7071066498756409, 0, 0, 0.7071066498756409)).multiply(child.quaternion));
+            }
+            if (child.isMesh && hasOver2000FacesOrVertices(child) && 1 == 1) {
                 var s = 0;
-                child.scale.x = 8; child.scale.y = 8; child.scale.z = 8;
+                //child.scale.x = 1; child.scale.y = 1; child.scale.z = 1;
                 var poly = new Polyhedron({ local: { body: { mass: 1 } } }).fromMesh(child, graphicsEngine);
-                poly.global.body.setPosition(new Vector3(Math.random() * 6 * s - 3 * s, 0,  Math.random() * 6 * s - 3 * s));
+                //poly.global.body.setPosition(new Vector3(Math.random() * 6 * s - 3 * s, 0, Math.random() * 6 * s - 3 * s));
                 poly.setRestitution(0);
                 poly.setFriction(0);
-                poly.mesh = graphicsEngine.meshLinker.createMeshData(child.clone());
-                poly.addToScene(graphicsEngine.scene);
+                poly.mesh = graphicsEngine.meshLinker.createMeshData(child);
+                // poly.addToScene(graphicsEngine.scene);
                 poly.setLocalFlag(Composite.FLAGS.STATIC, true);
-                composite.add(poly);
+                // composite.add(poly);
+                graphicsEngine.scene.add(child);
+                //child.material.wireframe = true;
+                top.e = child;
+                child.geometry.computeVertexNormals();
                 world.addComposite(poly);
                 top.poly = poly;
             }
+
         });
+        player.respawn();
     });
-    world.addComposite(composite);
+    // world.addComposite(composite);
 }
 top.Vector3 = Vector3;
-for (var i = 0; i < 1; i++) {
+for (var i = 0; i < 0; i++) {
     graphicsEngine.load('world.glb', function (gltf) {
         gltf.scene.castShadow = true;
         gltf.scene.receiveShadow = true;

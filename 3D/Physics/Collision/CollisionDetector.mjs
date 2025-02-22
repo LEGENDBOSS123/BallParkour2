@@ -86,9 +86,9 @@ var CollisionDetector = class {
 
     handleAll(shapes) {
         for (var i in shapes) {
-            // if (shapes[i].getLocalFlag(Composite.FLAGS.STATIC)) {
-            //     continue;
-            // }
+            if (shapes[i].getLocalFlag(Composite.FLAGS.STATIC)) {
+                continue;
+            }
             this.handle(shapes[i]);
         }
     }
@@ -312,12 +312,13 @@ var CollisionDetector = class {
         var inside = 0;
         var minT = 0;
         var maxT = 1;
-
+        var closestNormal = null;
         var binarySearch = function (t, disableHitbox = false) {
             spherePos = sphere.global.body.previousPosition.lerp(sphere.global.body.position, t);
             polyPos = poly.global.body.previousPosition.lerp(poly.global.body.position, t);
             relativePos = poly.global.body.rotation.conjugate().multiplyVector3(spherePos.subtract(polyPos));
             closestPoint = null;
+            closestNormal = null;
             minDistanceSquared = Infinity;
             inside = 0;
             var min = new Vector3();
@@ -338,7 +339,7 @@ var CollisionDetector = class {
                 max.z = Math.max(a.z, b.z, c.z);
 
 
-                if (this.horizontalRayIntersectsTriangle(relativePos, a, b, c)) {
+                if (this.horizontalRayIntersectsTriangle(relativePos, b, a, c)) {
                     inside++;
                 }
 
@@ -353,10 +354,10 @@ var CollisionDetector = class {
                 if (distSq < minDistanceSquared) {
                     minDistanceSquared = distSq;
                     closestPoint = closest;
+                    closestNormal = b.subtract(a).cross(c.subtract(a)).normalize();
                 }
             }
             if (inside % 2 == 1) {
-                console.log(1)
                 return -(minDistanceSquared + sphere.radius * sphere.radius);
             }
             return minDistanceSquared - sphere.radius * sphere.radius;
@@ -382,10 +383,17 @@ var CollisionDetector = class {
         var contact = new CollisionContact();
         contact.point = poly.translateLocalToWorld(closestPoint);
         contact.normal = spherePos.subtract(closestPoint2).normalizeInPlace();
+        if(contact.normal.magnitudeSquared() == 0){
+            contact.normal = closestNormal;
+            console.log("E");
+        }
         if (inside % 2 == 1) {
             contact.normal.scaleInPlace(-1);
         }
         contact.penetration = contact.normal.scale(sphere.radius).add(contact.point.subtract(sphere.global.body.position).projectOnto(contact.normal));
+        if(contact.penetration.magnitude() > 1){
+            console.log(contact);
+        }
         contact.body1 = sphere;
         contact.body2 = poly;
         contact.point = sphere.global.body.position.subtract(contact.normal.scale(sphere.radius));
