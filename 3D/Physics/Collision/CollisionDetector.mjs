@@ -86,9 +86,9 @@ var CollisionDetector = class {
 
     handleAll(shapes) {
         for (var i in shapes) {
-            if (shapes[i].getLocalFlag(Composite.FLAGS.STATIC)) {
-                //continue;
-            }
+            // if (shapes[i].getLocalFlag(Composite.FLAGS.STATIC)) {
+            //     continue;
+            // }
             this.handle(shapes[i]);
         }
     }
@@ -242,57 +242,74 @@ var CollisionDetector = class {
     }
 
     closestPointOnTriangle(p, a, b, c) {
-        let ab = b.subtract(a);
-        let ac = c.subtract(a);
-        let ap = p.subtract(a);
+        var ab = b.subtract(a);
+        var ac = c.subtract(a);
+        var ap = p.subtract(a);
 
-        let d1 = ab.dot(ap);
-        let d2 = ac.dot(ap);
+        var d1 = ab.dot(ap);
+        var d2 = ac.dot(ap);
 
         if (d1 <= 0 && d2 <= 0) return a;
 
-        let bp = p.subtract(b);
-        let d3 = ab.dot(bp);
-        let d4 = ac.dot(bp);
+        var bp = p.subtract(b);
+        var d3 = ab.dot(bp);
+        var d4 = ac.dot(bp);
         if (d3 >= 0 && d4 <= d3) return b
 
-        let cp = p.subtract(c);
-        let d5 = ab.dot(cp);
-        let d6 = ac.dot(cp);
+        var cp = p.subtract(c);
+        var d5 = ab.dot(cp);
+        var d6 = ac.dot(cp);
         if (d6 >= 0 && d5 <= d6) return c;
 
-        let vc = d1 * d4 - d3 * d2;
+        var vc = d1 * d4 - d3 * d2;
         if (vc <= 0 && d1 >= 0 && d3 <= 0) {
-            let v = d1 / (d1 - d3);
+            var v = d1 / (d1 - d3);
             return a.add(ab.scale(v));
         }
 
-        let vb = d5 * d2 - d1 * d6;
+        var vb = d5 * d2 - d1 * d6;
         if (vb <= 0 && d2 >= 0 && d6 <= 0) {
-            let w = d2 / (d2 - d6);
+            var w = d2 / (d2 - d6);
             return a.add(ac.scale(w));
         }
 
-        let va = d3 * d6 - d5 * d4;
+        var va = d3 * d6 - d5 * d4;
         if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
-            let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+            var w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
             return b.add(c.subtract(b).scale(w));
         }
 
-        let denom = 1 / (va + vb + vc);
-        let v = vb * denom;
-        let w = vc * denom;
+        var denom = 1 / (va + vb + vc);
+        var v = vb * denom;
+        var w = vc * denom;
         return a.add(ab.scale(v)).add(ac.scale(w));
     }
+
+    rayIntersectsTriangle(orig, dir, a, b, c) {
+        var EPSILON = 1e-6;
+        var edge1 = b.subtract(a);
+        var edge2 = c.subtract(a);
+        var h = new Vector3(0, -edge2.z, edge2.y);
+        var aDot = edge1.dot(h);
+        if (Math.abs(aDot) < EPSILON) return false;
+        var f = 1 / aDot;
+        var s = orig.subtract(a);
+        var u = f * s.dot(h);
+        if (u < 0 || u > 1) return false;
+        var q = s.cross(edge1);
+        var v = f * dir.dot(q);
+        if (v < 0 || u + v > 1) return false;
+        var t = f * edge2.dot(q);
+        return t > EPSILON;
+    }
+
     handleSpherePolyhedron(sphere, poly) {
         var spherePos = null;
         var closestPoint = null;
         var minDistanceSquared = Infinity;
-        var closestFace = null;
         var polyPos = null;
         var relativePos = null;
         var inside = 0;
-        var inside2 = 0;
         var minT = 0;
         var maxT = 1;
         var binarySearch = function (t, disableHitbox = false) {
@@ -300,10 +317,8 @@ var CollisionDetector = class {
             polyPos = poly.global.body.previousPosition.lerp(poly.global.body.position, t);
             relativePos = poly.global.body.rotation.conjugate().multiplyVector3(spherePos.subtract(polyPos));
             closestPoint = null;
-            closestFace = null;
             minDistanceSquared = Infinity;
             inside = 0;
-            inside2 = 0;
             var min = new Vector3();
             var max = new Vector3();
             var minS = relativePos.subtract(new Vector3(1, 1, 1).scale(sphere.radius));
@@ -321,29 +336,26 @@ var CollisionDetector = class {
                 min.z = Math.min(a.z, b.z, c.z);
                 max.z = Math.max(a.z, b.z, c.z);
 
+
+                if (this.rayIntersectsTriangle(relativePos, new Vector3(1, 0, 0), a, b, c)) {
+                    inside++;
+                }
+
                 if (!(min.x <= maxS.x && max.x >= minS.x && min.y <= maxS.y && max.y >= minS.y && min.z <= maxS.z && max.z >= minS.z)) {
                     if (!disableHitbox) {
                         continue;
                     }
                 }
 
-                var normal = b.subtract(a).cross(c.subtract(a));
-                inside2++;
-                if (relativePos.subtract(a).dot(normal) < 0) {
-                    inside++;
-                }
-
-
                 var closest = this.closestPointOnTriangle(relativePos, a, b, c);
                 var distSq = closest.subtract(relativePos).magnitudeSquared();
                 if (distSq < minDistanceSquared) {
                     minDistanceSquared = distSq;
                     closestPoint = closest;
-                    closestFace = face;
                 }
             }
-            if (inside == inside2 && inside != 0) {
-                return -(minDistanceSquared + sphere.radius * sphere.radius);   
+            if (inside % 2 == 1) {
+                return -(minDistanceSquared + sphere.radius * sphere.radius);
             }
             return minDistanceSquared - sphere.radius * sphere.radius;
         }.bind(this);
@@ -359,8 +371,8 @@ var CollisionDetector = class {
             }
         }
         t = maxT;
-
-        if (binarySearch(t, !Number.isFinite(minDistanceSquared)) >= 0) {
+        var bin = binarySearch(t, !Number.isFinite(minDistanceSquared));
+        if (bin > 0) {
             return false;
         }
 
@@ -368,7 +380,7 @@ var CollisionDetector = class {
         var contact = new CollisionContact();
         contact.point = poly.translateLocalToWorld(closestPoint);
         contact.normal = spherePos.subtract(closestPoint2).normalizeInPlace();
-        if (inside == inside2) {
+        if (inside % 2 == 1) {
             contact.normal.scaleInPlace(-1);
         }
         contact.penetration = contact.normal.scale(sphere.radius).add(contact.point.subtract(sphere.global.body.position).projectOnto(contact.normal));
