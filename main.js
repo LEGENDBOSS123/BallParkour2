@@ -266,7 +266,7 @@ for (var i = 0; i < 1; i++) {
 // for(var i of poly.localVertices){
 //     i.scaleInPlace(30);
 // }
-// poly.setPosition(new Vector3(0, 20, 0));
+// poly.setPosition(new Vector3(0, 0, 0));
 // poly.dimensionsChanged();
 // poly.setMeshAndAddToScene({}, graphicsEngine);
 // poly.setLocalFlag(Composite.FLAGS.STATIC, true);

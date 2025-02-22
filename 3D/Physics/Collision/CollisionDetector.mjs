@@ -285,7 +285,7 @@ var CollisionDetector = class {
         return a.add(ab.scale(v)).add(ac.scale(w));
     }
 
-    rayIntersectsTriangle(orig, dir, a, b, c) {
+    horizontalRayIntersectsTriangle(orig, a, b, c) {
         var EPSILON = 1e-6;
         var edge1 = b.subtract(a);
         var edge2 = c.subtract(a);
@@ -297,7 +297,7 @@ var CollisionDetector = class {
         var u = f * s.dot(h);
         if (u < 0 || u > 1) return false;
         var q = s.cross(edge1);
-        var v = f * dir.dot(q);
+        var v = f * q.x;
         if (v < 0 || u + v > 1) return false;
         var t = f * edge2.dot(q);
         return t > EPSILON;
@@ -338,7 +338,7 @@ var CollisionDetector = class {
                 max.z = Math.max(a.z, b.z, c.z);
 
 
-                if (this.rayIntersectsTriangle(relativePos, new Vector3(1, 0, 0), a, b, c)) {
+                if (this.horizontalRayIntersectsTriangle(relativePos, a, b, c)) {
                     inside++;
                 }
 
