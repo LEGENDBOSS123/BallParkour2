@@ -177,6 +177,8 @@ var Polyhedron = class extends Composite {
 
         this.global.body.rotation = new Quaternion(mesh.quaternion.w, mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z);
         this.global.body.setPosition(new Vector3(mesh.position.x, mesh.position.y, mesh.position.z));
+        this.global.body.actualPreviousPosition = this.global.body.position.copy();
+        this.global.body.previousRotation = this.global.body.rotation.copy();
         this.dimensionsChanged();
         return this;
     }

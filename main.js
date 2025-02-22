@@ -121,7 +121,7 @@ for (var i = 0; i < 1; i++) {
         global: {
             body: {
                 acceleration: new Vector3(0, gravity, 0),
-                position: new Vector3(100, 40, 120),
+                position: new Vector3(0, 20, 0),
                 // linearDamping: new Vector3(0.007, 0, 0.007),
                 // angularDamping: 1
             }
@@ -184,12 +184,13 @@ for (var i = 0; i < 1; i++) {
                 poly.mesh = graphicsEngine.meshLinker.createMeshData(child.clone());
                 poly.addToScene(graphicsEngine.scene);
                 poly.setLocalFlag(Composite.FLAGS.STATIC, true);
-                // composite.add(poly);
+                composite.add(poly);
                 world.addComposite(poly);
+                top.poly = poly;
             }
         });
     });
-    // world.addComposite(composite);
+    world.addComposite(composite);
 }
 top.Vector3 = Vector3;
 for (var i = 0; i < 1; i++) {

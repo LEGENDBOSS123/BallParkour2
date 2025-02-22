@@ -312,6 +312,7 @@ var CollisionDetector = class {
         var inside = 0;
         var minT = 0;
         var maxT = 1;
+
         var binarySearch = function (t, disableHitbox = false) {
             spherePos = sphere.global.body.previousPosition.lerp(sphere.global.body.position, t);
             polyPos = poly.global.body.previousPosition.lerp(poly.global.body.position, t);
@@ -343,7 +344,7 @@ var CollisionDetector = class {
 
                 if (!(min.x <= maxS.x && max.x >= minS.x && min.y <= maxS.y && max.y >= minS.y && min.z <= maxS.z && max.z >= minS.z)) {
                     if (!disableHitbox) {
-                        //continue;
+                        continue;
                     }
                 }
 
