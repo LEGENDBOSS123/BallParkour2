@@ -145,6 +145,9 @@ var SpatialHash = class {
                 return result;
             }
             for (var i of hash.hashmap) {
+                if(!func(i)){
+                    continue;
+                }
                 result.add(i);
             }
             return [...(new Set(result))];

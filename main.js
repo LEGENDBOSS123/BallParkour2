@@ -113,7 +113,7 @@ world.setIterations(4);
 world.graphicsEngine = graphicsEngine;
 
 var gravity = -0.2;
-for (var i = 0; i < 10; i++) {
+for (var i = 0; i < 1; i++) {
     var player = new Player({
         radius: 1,
         moveStrength: new Vector3(0.05, 0.05, 0.05),
@@ -121,7 +121,7 @@ for (var i = 0; i < 10; i++) {
         global: {
             body: {
                 acceleration: new Vector3(0, gravity, 0),
-                position: new Vector3(0, 21, 0),
+                position: new Vector3(0, 20, 0),
                 // linearDamping: new Vector3(0.007, 0, 0.007),
                 // angularDamping: 1
             }
@@ -162,7 +162,7 @@ var addParticle = function (position, damage) {
 
 top.addParticle = addParticle;
 
-for (var i = 0; i < 30; i++) {
+for (var i = 0; i < 1; i++) {
     graphicsEngine.load('donut.glb', function (gltf) {
         gltf.scene.castShadow = true;
         gltf.scene.receiveShadow = true;
@@ -172,8 +172,10 @@ for (var i = 0; i < 30; i++) {
             child.receiveShadow = true;
 
             if (child.isMesh) {
+                var s = 0;
+                //child.scale.x = 4.5; child.scale.y = 4.5; child.scale.z = 4.5;
                 var poly = new Polyhedron({ local: { body: { mass: 1 } } }).fromMesh(child, graphicsEngine);
-                poly.global.body.setPosition(new Vector3(Math.random() * 60 - 30, 10, Math.random() * 60 - 30));
+                poly.global.body.setPosition(new Vector3(child.scale.x+Math.random() * 6 * s - 3 * s, 10, Math.random() * 6 * s - 3 * s));
                 poly.setRestitution(0);
                 poly.setFriction(0);
                 poly.mesh = graphicsEngine.meshLinker.createMeshData(child.clone());
@@ -184,6 +186,7 @@ for (var i = 0; i < 30; i++) {
         });
     });
 }
+top.Vector3 = Vector3;
 for (var i = 0; i < 1; i++) {
     graphicsEngine.load('world.glb', function (gltf) {
         gltf.scene.castShadow = true;
@@ -232,26 +235,36 @@ for (var i = 0; i < 1; i++) {
 
 }
 
-var sphere2 = new Sphere({
-    radius: 0.5,
-    global: {
-        body: {
-            position: new Vector3(0, 20, 10),
-            acceleration: new Vector3(0, -0.2, 0)
-        }
-    },
-    local: {
-        body: {
-            mass: 0.2
-        }
-    },
-    graphicsEngine: graphicsEngine
-});
-top.sphere2 = sphere2;
-sphere2.setLocalFlag(Composite.FLAGS.CENTER_OF_MASS, true);
-sphere2.setMeshAndAddToScene({}, graphicsEngine);
-world.addComposite(sphere2);
+// var sphere2 = new Sphere({
+//     radius: 0.5,
+//     global: {
+//         body: {
+//             position: new Vector3(0, 20, 10),
+//             acceleration: new Vector3(0, -0.2, 0)
+//         }
+//     },
+//     local: {
+//         body: {
+//             mass: 0.2
+//         }
+//     },
+//     graphicsEngine: graphicsEngine
+// });
+// top.sphere2 = sphere2;
+// sphere2.setLocalFlag(Composite.FLAGS.CENTER_OF_MASS, true);
+// sphere2.setMeshAndAddToScene({}, graphicsEngine);
+// world.addComposite(sphere2);
 
+
+// var poly = new Polyhedron();
+// for(var i of poly.localVertices){
+//     i.scaleInPlace(30);
+// }
+// poly.setPosition(new Vector3(0, -20.965, 0));
+// poly.dimensionsChanged();
+// poly.setMeshAndAddToScene({}, graphicsEngine);
+// poly.setLocalFlag(Composite.FLAGS.STATIC, true);
+// world.addComposite(poly);
 
 
 let spaceBarPressed = false;

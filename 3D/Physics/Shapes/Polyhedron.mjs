@@ -41,7 +41,6 @@ var Polyhedron = class extends Composite {
     calculateLocalMomentOfInertia() {
         this.local.body.momentOfInertia = Matrix3.zero();
         for (var v of this.localVertices) {
-            var r = v.magnitude();
             var mass = this.local.body.mass / this.localVertices.length;
             var dx = v.x;
             var dy = v.y;
@@ -130,7 +129,7 @@ var Polyhedron = class extends Composite {
         geometry.setIndex(indices);
         geometry.computeVertexNormals();
 
-        var material = options?.material ?? new graphicsEngine.THREE.MeshPhongMaterial({ color: options?.color ?? 0x00ff00, wireframe: false });
+        var material = options?.material ?? new graphicsEngine.THREE.MeshPhongMaterial({ color: options?.color ?? 0x00ff00, wireframe: false, side: graphicsEngine.THREE.DoubleSide });
         this.mesh = graphicsEngine.meshLinker.createMeshData(new graphicsEngine.THREE.Mesh(geometry, material));
     }
 

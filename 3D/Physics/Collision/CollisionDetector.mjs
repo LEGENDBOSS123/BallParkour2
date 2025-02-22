@@ -86,6 +86,9 @@ var CollisionDetector = class {
 
     handleAll(shapes) {
         for (var i in shapes) {
+            if (shapes[i].getLocalFlag(Composite.FLAGS.STATIC)) {
+                //continue;
+            }
             this.handle(shapes[i]);
         }
     }
@@ -159,8 +162,8 @@ var CollisionDetector = class {
 
         for (var i = 0; i < this.contacts.length; i++) {
             var contact = this.contacts[i];
-            contact.body1Map.penetrationSum += contact.penetration.magnitude();
-            contact.body2Map.penetrationSum += contact.penetration.magnitude();
+            contact.body1Map.penetrationSum += contact.penetration.magnitudeSquared();
+            contact.body2Map.penetrationSum += contact.penetration.magnitudeSquared();
         }
 
         for (var contact of this.contacts) {
@@ -176,11 +179,12 @@ var CollisionDetector = class {
 
 
             if (contact.body1Map.penetrationSum != 0) {
-                contact.body1.translate(translation.scale(contact.penetration.magnitude() / contact.body1Map.penetrationSum * massRatio2));
+                contact.body1.translate(translation.scale(contact.penetration.magnitudeSquared() / contact.body1Map.penetrationSum * massRatio2));
             }
             if (contact.body2Map.penetrationSum != 0) {
-                contact.body2.translate(translation.scale(-contact.penetration.magnitude() / contact.body2Map.penetrationSum * massRatio1));
+                contact.body2.translate(translation.scale(-contact.penetration.magnitudeSquared() / contact.body2Map.penetrationSum * massRatio1));
             }
+
 
             if (contact.type == "CollisionContact") {
                 contact.body1.dispatchEvent("postCollision", [contact]);
@@ -213,6 +217,30 @@ var CollisionDetector = class {
         }
         return v;
     }
+
+    clampPointToAABB(v, aabb, dimensions) {
+        var dimensions = dimensions ?? new Vector3(aabb.width, aabb.height, aabb.depth).scale(0.5);
+        if (v.x < -dimensions.x) {
+            v.x = -dimensions.x;
+        }
+        else if (v.x > dimensions.x) {
+            v.x = dimensions.x;
+        }
+        if (v.y < -dimensions.y) {
+            v.y = -dimensions.y;
+        }
+        else if (v.y > dimensions.y) {
+            v.y = dimensions.y;
+        }
+        if (v.z < -dimensions.z) {
+            v.z = -dimensions.z;
+        }
+        else if (v.z > dimensions.z) {
+            v.z = dimensions.z;
+        }
+        return v;
+    }
+
     closestPointOnTriangle(p, a, b, c) {
         let ab = b.subtract(a);
         let ac = c.subtract(a);
@@ -258,7 +286,6 @@ var CollisionDetector = class {
     }
     handleSpherePolyhedron(sphere, poly) {
         var spherePos = null;
-        var localSpherePos = null;
         var closestPoint = null;
         var minDistanceSquared = Infinity;
         var closestFace = null;
@@ -268,7 +295,7 @@ var CollisionDetector = class {
         var inside2 = 0;
         var minT = 0;
         var maxT = 1;
-        var binarySearch = function (t) {
+        var binarySearch = function (t, disableHitbox = false) {
             spherePos = sphere.global.body.previousPosition.lerp(sphere.global.body.position, t);
             polyPos = poly.global.body.previousPosition.lerp(poly.global.body.position, t);
             relativePos = poly.global.body.rotation.conjugate().multiplyVector3(spherePos.subtract(polyPos));
@@ -294,23 +321,29 @@ var CollisionDetector = class {
                 min.z = Math.min(a.z, b.z, c.z);
                 max.z = Math.max(a.z, b.z, c.z);
 
-
                 if (!(min.x <= maxS.x && max.x >= minS.x && min.y <= maxS.y && max.y >= minS.y && min.z <= maxS.z && max.z >= minS.z)) {
-                    continue;
+                    if (!disableHitbox) {
+                        continue;
+                    }
                 }
-                
+
                 var normal = b.subtract(a).cross(c.subtract(a));
-                var closest = this.closestPointOnTriangle(relativePos, a, b, c);
                 inside2++;
                 if (relativePos.subtract(a).dot(normal) < 0) {
                     inside++;
                 }
+
+
+                var closest = this.closestPointOnTriangle(relativePos, a, b, c);
                 var distSq = closest.subtract(relativePos).magnitudeSquared();
                 if (distSq < minDistanceSquared) {
                     minDistanceSquared = distSq;
                     closestPoint = closest;
                     closestFace = face;
                 }
+            }
+            if (inside == inside2 && inside != 0) {
+                return -(minDistanceSquared + sphere.radius * sphere.radius);   
             }
             return minDistanceSquared - sphere.radius * sphere.radius;
         }.bind(this);
@@ -326,10 +359,10 @@ var CollisionDetector = class {
             }
         }
         t = maxT;
-        if (binarySearch(t) > 0 && inside != poly.faces.length) {
+
+        if (binarySearch(t, !Number.isFinite(minDistanceSquared)) >= 0) {
             return false;
         }
-
 
         var closestPoint2 = poly.global.body.rotation.multiplyVector3(closestPoint).addInPlace(polyPos);
         var contact = new CollisionContact();
@@ -347,29 +380,54 @@ var CollisionDetector = class {
 
     }
 
-    handleSphereBox(sphere1, box1) {
-        var spherePos = sphere1.global.body.position;
-        var dimensions = new Vector3(box1.width, box1.height, box1.depth).scale(0.5);
-        var relativePos = box1.translateWorldToLocal(spherePos);
-
-        var prevPos = box1.global.body.rotation.conjugate().multiplyVector3(sphere1.global.body.previousPosition.subtract(box1.global.body.previousPosition));
-
-        var delta = relativePos.subtract(prevPos);
+    handleSphereBox(sphere, box) {
 
 
+        var spherePos = null;
+        var closestPoint = null;
+        var minDistanceSquared = Infinity;
+        var boxPos = null;
+        var relativePos = null;
+        var inside = false;
         var minT = 0;
         var maxT = 1;
-        var dimensions = new Vector3(box1.width, box1.height, box1.depth).scale(0.5);
-        var binarySearch = function (t, getData = false) {
-            spherePos = sphere1.global.body.previousPosition.lerp(sphere1.global.body.position, t);
-            var boxPos = box1.global.body.previousPosition.lerp(box1.global.body.position, t);
-            relativePos = box1.global.body.rotation.conjugate().multiplyVector3(spherePos.subtract(boxPos));
+        var binarySearch = function (t) {
+            spherePos = sphere.global.body.previousPosition.lerp(sphere.global.body.position, t);
+            boxPos = box.global.body.previousPosition.lerp(box.global.body.position, t);
+            relativePos = box.global.body.rotation.conjugate().multiplyVector3(spherePos.subtract(boxPos));
+            closestPoint = null;
+            minDistanceSquared = Infinity;
+            inside = false;
 
-            var closest = this.getClosestPointToAABB(relativePos.copy(), box1);
-            var distanceSquared = closest.subtract(relativePos).magnitudeSquared();
+            var clampedPoint = this.clampPointToAABB(relativePos.copy(), box);
+            inside = clampedPoint.equals(relativePos);
 
-            return distanceSquared - sphere1.radius * sphere1.radius;
+            if (inside) {
+                var half_x = box.width * 0.5;
+                var half_y = box.height * 0.5;
+                var half_z = box.depth * 0.5;
+                var dx = Math.abs(relativePos.x - half_x);
+                var dy = Math.abs(relativePos.y - half_y);
+                var dz = Math.abs(relativePos.z - half_z);
+
+                var min_dist = Math.min(dx, dy, dz);
+                var clamped2 = clampedPoint.copy();
+                if (min_dist === dx) {
+                    clamped2.x = relativePos.x > 0 ? half_x : -half_x;
+                } else if (min_dist === dy) {
+                    clamped2.y = relativePos.y > 0 ? half_y : -half_y;
+                } else {
+                    clamped2.z = relativePos.z > 0 ? half_z : -half_z;
+                }
+                closestPoint = clamped2;
+            }
+            else {
+                closestPoint = clampedPoint;
+            }
+            minDistanceSquared = closestPoint.subtract(relativePos).magnitudeSquared();
+            return (inside ? -1 : 1) * (minDistanceSquared - (inside ? -1 : 1) * sphere.radius * sphere.radius);
         }.bind(this);
+
         var t = 1;
         for (var i = 0; i < this.binarySearchDepth; i++) {
             t = (minT + maxT) / 2;
@@ -381,86 +439,26 @@ var CollisionDetector = class {
             }
         }
         t = maxT;
+
         if (binarySearch(t) > 0) {
             return false;
         }
-        if (t !== null) {
 
-            var pos = prevPos.addInPlace(delta.scale(t - 0.00001));
-            var closest = this.getClosestPointToAABB(pos.copy(), box1);
-            if (pos.distanceSquared(closest) > 0 && pos.distanceSquared(closest) < sphere1.radius * sphere1.radius) {
-                var contact = new CollisionContact();
-
-                var normal = pos.subtract(closest).normalize();
-
-                contact.point = box1.translateLocalToWorld(closest);
-                contact.normal = box1.global.body.rotation.multiplyVector3(normal);
-                contact.penetration = contact.normal.scale(sphere1.radius).add(contact.point.subtract(sphere1.global.body.position).projectOnto(contact.normal));
-                contact.body1 = sphere1;
-                contact.body2 = box1;
-                contact.point = sphere1.global.body.position.subtract(contact.normal.scale(sphere1.radius));
-                this.addContact(contact);
-                return true;
-
-            }
-
-        }
-        if (!(relativePos.x >= dimensions.x || relativePos.y >= dimensions.y || relativePos.z >= dimensions.z || relativePos.x <= -dimensions.x || relativePos.y <= -dimensions.y || relativePos.z <= -dimensions.z)) {
-            var penetrationValues = new Vector3(relativePos.x - dimensions.x, relativePos.y - dimensions.y, relativePos.z - dimensions.z);
-            if (relativePos.x < 0) {
-                penetrationValues.x = relativePos.x + dimensions.x;
-            }
-            if (relativePos.y < 0) {
-                penetrationValues.y = relativePos.y + dimensions.y;
-            }
-            if (relativePos.z < 0) {
-                penetrationValues.z = relativePos.z + dimensions.z;
-            }
-            var absPenetrationValues = new Vector3(Math.abs(penetrationValues.x), Math.abs(penetrationValues.y), Math.abs(penetrationValues.z));
-            var contactPoint = new Vector3();
-            if (absPenetrationValues.x < absPenetrationValues.y && absPenetrationValues.x < absPenetrationValues.z) {
-                contactPoint = new Vector3(penetrationValues.x, 0, 0);
-            }
-            else if (absPenetrationValues.y < absPenetrationValues.z) {
-                contactPoint = new Vector3(0, penetrationValues.y, 0);
-            }
-            else {
-                contactPoint = new Vector3(0, 0, penetrationValues.z);
-            }
-            var contact = new CollisionContact();
-            contactPoint = box1.translateLocalToWorld(contactPoint.addInPlace(relativePos));
-
-            contact.point = contactPoint;
-
-            contact.normal = spherePos.subtract(contactPoint).normalizeInPlace();
-            contact.penetration = contact.normal.scale(sphere1.radius + contactPoint.distance(spherePos));
-            contact.body1 = sphere1;
-            contact.body2 = box1;
-            this.addContact(contact);
-            return true;
-        }
-
-
-        var closestClampedPoint = this.getClosestPointToAABB(relativePos.copy(), box1);
-        var distanceSquared = closestClampedPoint.subtract(relativePos).magnitudeSquared();
-        if (distanceSquared >= sphere1.radius * sphere1.radius) {
-            return false;
-        }
+        var closestPoint2 = box.global.body.rotation.multiplyVector3(closestPoint).addInPlace(boxPos);
         var contact = new CollisionContact();
-        var closestClampedPointToWorld = box1.translateLocalToWorld(closestClampedPoint);
-
-
-
-        contact.normal = spherePos.subtract(closestClampedPointToWorld).normalizeInPlace();
-        contact.point = sphere1.global.body.position.subtract(contact.normal.scale(sphere1.radius));
-        if (contact.normal.magnitudeSquared() == 0) {
-            contact.normal = new Vector3(1, 0, 0);
+        contact.point = box.translateLocalToWorld(closestPoint);
+        contact.normal = spherePos.subtract(closestPoint2).normalizeInPlace();
+        if (inside) {
+            contact.normal.scaleInPlace(-1);
         }
-        contact.penetration = contact.normal.scale(sphere1.radius - Math.sqrt(distanceSquared));
-        contact.body1 = sphere1;
-        contact.body2 = box1;
+        contact.penetration = contact.normal.scale(sphere.radius).add(contact.point.subtract(sphere.global.body.position).projectOnto(contact.normal));
+        contact.body1 = sphere;
+        contact.body2 = box;
+        contact.point = sphere.global.body.position.subtract(contact.normal.scale(sphere.radius));
         this.addContact(contact);
         return true;
+
+
     }
 
     handleSphereSphere(sphere1, sphere2) {
